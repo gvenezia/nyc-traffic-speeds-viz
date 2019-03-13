@@ -18,11 +18,19 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
   var overlay = new google.maps.OverlayView();
 
   data.forEach( d => {
-    d.lat = d.link_points.match(/[.\d]+/)[0];
-    d.lng = d.link_points.match( /(?<=,)[,\-.\d]+/ )[0];
+    // Extract the "lat,lng" and put into array
+    d.latLng = d.link_points.match( /[\d.]+,[-\d.]+/g );
 
-    console.log(d.lat);
-  })
+    // Separate the "lat" and "lng" and replace array
+    d.latLng.forEach( (ll, i) => {
+      let lat = ll.match(/[.\d]+/)[0] || false;
+      let lng = ll.match( /(?<=,)[,\-.\d]+/ )[0] || false;
+      // Replace the latLng strings with arrays
+      if (d.latLng[i] && lat && lng)
+        d.latLng[i] = [ lat, lng ];
+    });
+
+  });
 
   // Add the container when the overlay is added to the map.
   overlay.onAdd = function() {
@@ -33,7 +41,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
     // Draw each marker as a separate SVG element
     overlay.draw = function() {
       var projection = this.getProjection(),
-          padding = 100;
+          padding = 10;
 
       var marker = layer.selectAll("svg")
                           .data(data)
@@ -42,27 +50,62 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
                           .each(transform)
                           .attr("class", "marker");
 
-      // Add a circle.
-      marker.append("circle")
-          .attr("r", 4.5)
-          .attr("cx", padding)
-          .attr("cy", padding);
+      // Add a line for the road segment
+      marker.append("path")
+          .attr("stroke-width", 1)
+          .attr('stroke', 'white')
+          .attr('d', 'M 0 0 L 10 10 '
+          // d => {
+          //   let pathStr = '';
+          //   let temp = '';
+          //   let latPad = d.latLng[0][0];
+          //   let lngPad = d.latLng[0][1];
 
-      // Add a label.
+          //   d.latLng.forEach( (ll,i) => {
+          //     temp = new google.maps.LatLng( ll[0] , ll[1]  );
+          //     temp = projection.fromLatLngToDivPixel(temp);
+              
+          //     pathStr += (i === 0) ? `M 0 0` : ` L `;
+          //     pathStr += temp.x + ' ' + temp.y;
+          //   });
+
+          //   return pathStr;
+          // }
+          );
+
+      // Add a label
       marker.append("text")
-          .attr("x", padding + 7)
+          .attr("x", padding + 20)
           .attr("y", padding)
           .attr("dy", ".31em")
-          .text(function(d) { return d.key; });
+          .text(d => d.link_name );
 
+      // For each on d.latLng to get a new map latlng for each point?
       function transform(d) {
-        d = new google.maps.LatLng( d.lat, d.lng );
-        d = projection.fromLatLngToDivPixel(d);
+        // let pathStr = '';
+        // let temp = '';
 
-        return d3.select(this)
-            .style("left", (d.x - padding) + "px")
-            .style("top", (d.y - padding) + "px");
+        // d.latLng.forEach( (ll,i) => {
+        //   temp = new google.maps.LatLng( ll[0], ll[1] );
+        //   temp = projection.fromLatLngToDivPixel(temp);
+          
+        //   pathStr += (i === 0) ? `M ` : ` L `;
+        //   pathStr += temp.x + ' ' + temp.y;
+        // });
+
+        // return d3.select(this)
+        //       .attr('d', pathStr)
+        //       .style("left", (d.x - padding) + "px")
+        //       .style("top", (d.y - padding) + "px");
+
+          d = new google.maps.LatLng( d.latLng[0][0], d.latLng[0][1]);
+          d = projection.fromLatLngToDivPixel(d);
+          return d3.select(this)
+              .style("left", (d.x - padding) + "px")
+              .style("top", (d.y - padding) + "px");   
       }
+
+
     };
   };
 

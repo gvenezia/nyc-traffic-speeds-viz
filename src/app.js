@@ -1,20 +1,6 @@
-<!DOCTYPE html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
-  <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="style.css">
-</head>
-<!-- =============== BODY =============== -->
-<body>
-<div id="map"></div>
+import * as d3 from 'd3';
 
-<div id="svg-container"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAESQYv9IoXIqbTDu8q98anB_zm3_OPal0" type="text/javascript"></script>
-<script src="//d3js.org/d3.v3.min.js"></script>
-<script src="google-map-styles.js"></script>
-
-<script>
+import mapStyles from './google-map-styles.js';
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
@@ -22,7 +8,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   center: new google.maps.LatLng(40.7224364,-73.9909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
-  styles: darkFaded
+  styles: mapStyles.darkFaded
 });
 
 // Load the station data. When the data comes back, create an overlay.
@@ -76,4 +62,4 @@ d3.json("stations.json", function(error, data) {
   overlay.setMap(map);
 });
 
-</script>
+  

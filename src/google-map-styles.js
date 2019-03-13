@@ -1,8 +1,9 @@
-  // ========================== Style sets ==========================
-  // ================================================================
+// ========================== Style sets ==========================
+// ================================================================
 
-    // Sarah Frisk (https://snazzymaps.com/style/72543/assassins-creed-iv)
-const darkBlueGreen = [
+// Sarah Frisk (https://snazzymaps.com/style/72543/assassins-creed-iv)
+const mapStyles = { 
+  darkBlueGreen: [
     {
         "featureType": "all",
         "elementType": "all",
@@ -257,10 +258,10 @@ const darkBlueGreen = [
             }
         ]
     }
-]
+],
 
-  // All grey except arterial roads
-  const greyCyanArterial = [
+// All grey except arterial roads
+greyCyanArterial: [
     {"featureType": "all",
         "stylers": [
           { "color": "#C0C0C0" }
@@ -278,10 +279,9 @@ const darkBlueGreen = [
           { "visibility": "off" }
         ]
       }
-  ]
-
+],
   // Night Mode
-  const nightModeUncluttered = [
+  nightModeUncluttered: [
     {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
     {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
     {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
@@ -388,11 +388,11 @@ const darkBlueGreen = [
       elementType: 'labels.text.stroke',
       stylers: [{color: '#17263c'}]
     }
-  ];
+  ],
 
 
 // Dark faded style by "Roy" (https://snazzymaps.com/style/71079/dark)
-const darkFaded =  [
+darkFaded: [
     {
         "featureType": "all",
         "elementType": "geometry",
@@ -737,3 +737,6 @@ const darkFaded =  [
         ]
     }
 ]
+}
+
+export default mapStyles;

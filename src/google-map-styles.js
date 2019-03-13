@@ -1,8 +1,7 @@
 // ========================== Style sets ==========================
 // ================================================================
-
-// Sarah Frisk (https://snazzymaps.com/style/72543/assassins-creed-iv)
-const mapStyles = { 
+export const mapStyles = { 
+  // Sarah Frisk (https://snazzymaps.com/style/72543/assassins-creed-iv)
   darkBlueGreen: [
     {
         "featureType": "all",
@@ -736,7 +735,5 @@ darkFaded: [
             }
         ]
     }
-]
-}
-
-export default mapStyles;
+  ]
+};

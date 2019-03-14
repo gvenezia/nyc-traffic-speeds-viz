@@ -4,7 +4,7 @@ import { mapStyles } from './google-map-styles.js';
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 11,
+  zoom: 13,
   center: new google.maps.LatLng(40.7224364,-73.9909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
@@ -58,15 +58,20 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
           .attr('d', d => {
             let pathStr = '';
             let temp = {};
-            let latPad = d.latLng[0][0];
-            let lngPad = d.latLng[0][1];
+            let latPad = 0;
+            let lngPad = 0;
 
             d.latLng.forEach( (ll,i) => {
               temp = new google.maps.LatLng( +ll[0], +ll[1] );
               temp = projection.fromLatLngToDivPixel(temp);
+
+              if (i === 0){
+                latPad = temp.x
+                lngPad = temp.y
+              }
               
               pathStr += (i === 0) ? `M ${padding} ${padding} ` : ` L `;
-              pathStr += (temp.x + padding) + ' ' + (temp.y + padding);
+              pathStr += (temp.x - latPad + padding) + ' ' + (temp.y - lngPad + padding);
             });
 
             return pathStr;

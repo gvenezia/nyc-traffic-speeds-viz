@@ -8,18 +8,16 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   center: new google.maps.LatLng(40.7224364,-73.9909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
-  styles: mapStyles.darkFaded
+  styles: mapStyles.nightModeUncluttered
 });
 
 // Load the station data. When the data comes back, create an overlay.
 d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
   if (error) throw error;
 
-  var overlay = new google.maps.OverlayView();
-
   data.forEach( d => {
     // Extract the "lat,lng" and put into array
-    d.latLng = d.link_points.match( /\d+\.\d+,-\d+.\d+/g );
+    d.latLng = d.link_points.match( /\d+\.\d{4,},-\d+.\d{4,}/g );
 
     // Separate the "lat" and "lng" and replace array
     d.latLng.forEach( (ll, i) => {
@@ -31,6 +29,17 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
     });
 
   });
+
+  let minSpeed = d3.min(data, d => d.speed)
+  let maxSpeed = d3.max(data, d => d.speed)
+
+  // Color Scale for traffic speed
+  let color = d3.scaleLinear()
+    .domain([minSpeed, maxSpeed])
+    .range(["#b20035", "#00cc7a"]);
+
+
+  var overlay = new google.maps.OverlayView();
 
   // Add the container when the overlay is added to the map.
   overlay.onAdd = function() {
@@ -52,8 +61,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
 
       // Add a line for the road segment
       marker.append("path")
-          .attr("stroke-width", 1)
-          .attr('stroke', 'white')
+          .attr("stroke-width", 3)
+          .attr('stroke', d => color(d.speed) )
           .attr('fill', 'none')
           .attr('d', d => {
             let pathStr = '';

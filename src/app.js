@@ -12,14 +12,14 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
+d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
   if (error) throw error;
 
   var overlay = new google.maps.OverlayView();
 
   data.forEach( d => {
     // Extract the "lat,lng" and put into array
-    d.latLng = d.link_points.match( /[\d.]+,[-\d.]+/g );
+    d.latLng = d.link_points.match( /\d+\.\d+,-\d+.\d+/g );
 
     // Separate the "lat" and "lng" and replace array
     d.latLng.forEach( (ll, i) => {
@@ -41,7 +41,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
     // Draw each marker as a separate SVG element
     overlay.draw = function() {
       var projection = this.getProjection(),
-          padding = 10;
+          padding = 100;
 
       var marker = layer.selectAll("svg")
                           .data(data)
@@ -54,24 +54,23 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
       marker.append("path")
           .attr("stroke-width", 1)
           .attr('stroke', 'white')
-          .attr('d', 'M 0 0 L 10 10 '
-          // d => {
-          //   let pathStr = '';
-          //   let temp = '';
-          //   let latPad = d.latLng[0][0];
-          //   let lngPad = d.latLng[0][1];
+          .attr('fill', 'none')
+          .attr('d', d => {
+            let pathStr = '';
+            let temp = {};
+            let latPad = d.latLng[0][0];
+            let lngPad = d.latLng[0][1];
 
-          //   d.latLng.forEach( (ll,i) => {
-          //     temp = new google.maps.LatLng( ll[0] , ll[1]  );
-          //     temp = projection.fromLatLngToDivPixel(temp);
+            d.latLng.forEach( (ll,i) => {
+              temp = new google.maps.LatLng( +ll[0], +ll[1] );
+              temp = projection.fromLatLngToDivPixel(temp);
               
-          //     pathStr += (i === 0) ? `M 0 0` : ` L `;
-          //     pathStr += temp.x + ' ' + temp.y;
-          //   });
+              pathStr += (i === 0) ? `M ${padding} ${padding} ` : ` L `;
+              pathStr += (temp.x + padding) + ' ' + (temp.y + padding);
+            });
 
-          //   return pathStr;
-          // }
-          );
+            return pathStr;
+          });
 
       // Add a label
       marker.append("text")
@@ -100,6 +99,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f1.csv", function(error, data) {
 
           d = new google.maps.LatLng( d.latLng[0][0], d.latLng[0][1]);
           d = projection.fromLatLngToDivPixel(d);
+
           return d3.select(this)
               .style("left", (d.x - padding) + "px")
               .style("top", (d.y - padding) + "px");   

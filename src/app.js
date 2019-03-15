@@ -4,7 +4,9 @@ import { mapStyles } from './google-map-styles.js';
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 12,
+  zoom: 11,
+  minZoom: 9,
+  maxZoom: 14,
   center: new google.maps.LatLng(40.7224364,-73.9909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
@@ -53,7 +55,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
     // Draw each marker as a separate SVG element
     overlay.draw = function() {
       var projection = this.getProjection(),
-          padding = 100;
+          padding = 500,
+          zoom = Math.floor()
 
       var marker = layer.selectAll("svg")
                           .data(data)
@@ -79,7 +82,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
               .attr('fill', d => color(d.speed) );
 
       // Add a line for the road segment
-      marker.append("path")
+      let path = marker.append("path")
           .attr("stroke-width", 5)
           .attr('stroke', d => color(d.speed) )
           .attr('fill', 'none')
@@ -104,8 +107,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
 
             return pathStr;
           })
-          .attr("marker-start", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
-          .attr("marker-end", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
+          // .attr("marker-start", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
+          // .attr("marker-end", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
 
       // Add a label
       // marker.append("text")
@@ -116,22 +119,6 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
 
       // For each on d.latLng to get a new map latlng for each point?
       function transform(d) {
-        // let pathStr = '';
-        // let temp = '';
-
-        // d.latLng.forEach( (ll,i) => {
-        //   temp = new google.maps.LatLng( ll[0], ll[1] );
-        //   temp = projection.fromLatLngToDivPixel(temp);
-          
-        //   pathStr += (i === 0) ? `M ` : ` L `;
-        //   pathStr += temp.x + ' ' + temp.y;
-        // });
-
-        // return d3.select(this)
-        //       .attr('d', pathStr)
-        //       .style("left", (d.x - padding) + "px")
-        //       .style("top", (d.y - padding) + "px");
-
           d = new google.maps.LatLng( d.latLng[0][0], d.latLng[0][1]);
           d = projection.fromLatLngToDivPixel(d);
 
@@ -140,10 +127,49 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
               .style("top", (d.y - padding) + "px");   
       }
 
+      // Zoom change events
+      map.addListener('zoom_changed', () => {
+        // Update svg positions
+        window.setTimeout( () => {
+          marker = layer.selectAll("svg")
+                            .data(data)
+                            .each(transform) // update existing markers
+                          .enter().append("svg")
+                            .each(transform)
+                            .attr("class", "marker");
 
-    };
+          // Update road paths
+          path.transition(50)
+          // .attr('stroke-width', 5)
+          .attr('d', d => {
+            let pathStr = '';
+            let temp = {};
+            let latPad = 0;
+            let lngPad = 0;
+
+            d.latLng.forEach( (ll,i) => {
+              temp = new google.maps.LatLng( +ll[0], +ll[1] );
+              temp = projection.fromLatLngToDivPixel(temp);
+
+              if (i === 0){
+                latPad = temp.x
+                lngPad = temp.y
+              }
+              
+              pathStr += (i === 0) ? `M ${padding} ${padding} ` : ` L `;
+              pathStr += (temp.x - latPad + padding) + ' ' + (temp.y - lngPad + padding);
+            });
+
+            return pathStr;
+          })
+        }, 200) // End window.setTimeout
+      });
+
+    }; // End overlay.draw()
   };
 
   // Bind our overlay to the map…
   overlay.setMap(map);
+
+  
 }); // End d3.json  

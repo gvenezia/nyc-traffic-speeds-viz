@@ -12,7 +12,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f2.csv", function(error, data) {
+d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
   if (error) throw error;
 
   data.forEach( d => {

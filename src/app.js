@@ -5,8 +5,8 @@ import { mapStyles } from './google-map-styles.js';
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
   zoom: 11,
-  minZoom: 9,
-  maxZoom: 14,
+  minZoom: 11,
+  maxZoom: 15,
   center: new google.maps.LatLng(40.7224364,-73.9909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
@@ -35,6 +35,35 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
     });
 
   });
+
+  // Correct faulty latLng for the FDR bridge
+  data[110].latLng.splice(10, 1)
+  // console.log(data[110].latLng);
+
+  let decodedPath = google.maps.geometry.encoding.decodePath('gsbxFfftaMrFQ`BQvBWxBs@rCcBpe@wVnb@iU');
+  // let decodedLevels = google.maps.geometry.encoding.decodePath('o|_xFdmqaMgu@iWo_@t}@');
+
+  // Polyline ======
+  let customPolyLine = [
+    {lat: 40.794316, lng: -73.931085},  
+    {lat: 40.787610, lng: -73.938201}
+  ]
+
+
+
+  let customPath = new google.maps.Polyline({
+          // locations: ,
+          // levels: 3,
+          path: decodedPath,
+          geodesic: true,
+          strokeColor: '#FF0000',
+          strokeOpacity: 1.0,
+          strokeWeight: 5
+        });
+  // ======
+
+  customPath.setMap(map)
+  
 
   let minSpeed = d3.min(data, d => d.speed);
   let maxSpeed = d3.max(data, d => d.speed);
@@ -110,7 +139,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
           // .attr("marker-start", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
           // .attr("marker-end", (d,i) => `url(#marker-${i})`) // Use unique arrowhead for proper color
 
-      // Add a label
+      // // Add a label
       // marker.append("text")
       //     .attr("x", padding + 20)
       //     .attr("y", padding)

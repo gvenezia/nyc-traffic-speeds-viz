@@ -38,35 +38,32 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
 
   // Correct faulty latLng for the FDR bridge
   data[110].latLng.splice(10, 1)
-  // console.log(data[110].latLng);
-
-  let decodedPath = google.maps.geometry.encoding.decodePath('gsbxFfftaMrFQ`BQvBWxBs@rCcBpe@wVnb@iU');
-  // let decodedLevels = google.maps.geometry.encoding.decodePath('o|_xFdmqaMgu@iWo_@t}@');
 
   // Polyline ======
-  let customPolyLine = [
-    {lat: 40.794316, lng: -73.931085},  
-    {lat: 40.787610, lng: -73.938201}
-  ]
+  // Decode the given polyline with google maps geometry library
+  let decodedPath = google.maps.geometry.encoding.decodePath('gsbxFfftaMrFQ`BQvBWxBs@rCcBpe@wVnb@iU');
 
-
+  // Test path for polyline
+  // let customPolyLine = [
+  //   {lat: 40.794316, lng: -73.931085},  
+  //   {lat: 40.787610, lng: -73.938201}
+  // ]
 
   let customPath = new google.maps.Polyline({
-          // locations: ,
-          // levels: 3,
           path: decodedPath,
           geodesic: true,
           strokeColor: '#FF0000',
           strokeOpacity: 1.0,
           strokeWeight: 5
         });
+
+  // Draw the path
+  customPath.setMap(map)
   // ======
 
-  customPath.setMap(map)
-  
-
-  let minSpeed = d3.min(data, d => d.speed);
-  let maxSpeed = d3.max(data, d => d.speed);
+  // Find minimum and maximum traffic speeds for use in color scale
+  let minSpeed = d3.min(data, d => d.speed),
+      maxSpeed = d3.max(data, d => d.speed);
 
   // Color Scale for traffic speed
   let color = d3.scaleLinear()

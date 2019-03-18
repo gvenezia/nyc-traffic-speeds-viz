@@ -14,7 +14,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
+d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, data) {
   if (error) throw error;
 
   // format data 
@@ -31,25 +31,38 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_f3.csv", function(error, data) {
     .domain([minSpeed, maxSpeed/2, maxSpeed])
     .range(["#b20035", "yellow", "#00cc7a"]);
 
+  // Filter data for the current time
+  // data.filter
+
   // ====== Polyline ======
+  let filteredData = [];
   let decodedPath = '';
   let customPath = {};
 
-  data.forEach(d => {
-    // Decode the given polyline with google maps geometry library
-    decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
+  function drawPolylines(date){
+    console.log(data);
+    filteredData = data.filter(d => d.data_as_of.indexOf( '11:38' ) !== -1  )
 
-    // set the polyline
-    customPath = new google.maps.Polyline({
-            path: decodedPath,
-            geodesic: true,
-            strokeColor: color(d.speed),
-            strokeOpacity: 1.0,
-            strokeWeight: 5
-          });
+    console.log(filteredData);
 
-    // Draw the path
-    customPath.setMap(map)
-  });
+    filteredData.forEach(d => {
+      // Decode the given polyline with google maps geometry library
+      decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
+
+      // set the polyline
+      customPath = new google.maps.Polyline({
+              path: decodedPath,
+              geodesic: true,
+              strokeColor: color(d.speed),
+              strokeOpacity: 1.0,
+              strokeWeight: 5
+            });
+
+      // Draw the path
+      customPath.setMap(map)
+    });
+  }
+
+  drawPolylines();
   
 }); // End d3.json  

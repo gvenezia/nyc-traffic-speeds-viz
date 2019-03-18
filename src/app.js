@@ -38,7 +38,9 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
   // Color Scale for traffic speed
   let color = d3.scaleLinear()
     .domain([minSpeed, maxSpeed/2, maxSpeed])
-    .range(["#b20035", "yellow", "#00cc7a"]);
+    .range(["#b20035", "#ffef19", "#00cc7a"]);
+
+  console.log(color(40));
 
   // Filter data for the current time
   // data.filter
@@ -49,6 +51,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
   let customPath = {};
   let times = ['11:33', '11:38'];
   let count = 0;
+  let interpolater = null;
 
   // ================== Cycle through data ==================
   // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
@@ -60,7 +63,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
   }
 
   function drawPolylines(){
-    time = times[count++]
+    time = times[count]
 
     filteredData = data.filter(d => d.data_as_of.indexOf( `${time}` ) !== -1  )
 
@@ -71,19 +74,54 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
       decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
 
       // set the polyline
-      customPath = new google.maps.Polyline({
+      let customPath = new google.maps.Polyline({
               path: decodedPath,
               geodesic: true,
               strokeColor: color(d.speed),
-              strokeOpacity: 1.0,
-              strokeWeight: 5
+              strokeOpacity: 0,
+              strokeWeight: 5,
+              map: map
             });  
 
       // Interpolation      
+      var step = 0;
+      var numSteps = 100; //Change this to set animation resolution
+      var timePerStep = 50; //Change this to alter animation speed
+      let interpolatedColor = '';
+      let interpolatedOpacity = 0;
+      let nextSpeed = data.filter(df => df.data_as_of.indexOf(times[1]) !== -1  && df.link_id === d.link_id)[0].speed;
 
-      // Draw the path
-      customPath.setMap(map)
+      console.log(nextSpeed - d.speed);
+
+      let opacityInterpolater = setInterval(function() {
+         step += 1;
+         if (step > numSteps) {
+            step = 0;
+            setInterval(colorInterpolater, timePerStep)
+            
+            return clearInterval(opacityInterpolater);
+         } else {
+            interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
+            customPath.setOptions({strokeOpacity: interpolatedOpacity});
+         }
+      }, timePerStep);
+
+      let colorInterpolater = function(){
+         step += 1;
+         if (step > numSteps) {
+            clearInterval(interpolater);
+         } else {
+            if (count === 0){
+              
+            }
+            interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed - 50) )(step/numSteps);
+            customPath.setOptions({strokeColor: interpolatedColor})
+         }
+      };
     });
+
+    // TEMP CLEAR
+    return clearInterval(fiveMinCycler); // Stop setInterval calls
 
     // Specific time for an event (like projected totals popping up)
     if ( time === endTime ){

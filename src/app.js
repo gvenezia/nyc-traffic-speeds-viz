@@ -8,7 +8,7 @@ let animationCycle = 1500;
 // Starting date and time
 let date = '2/16';
 let endDate = '2/16';
-let time = '11:33';
+let startTime = '11:33';
 let endTime = '11:38';
 
 // Create the Google Map…
@@ -56,14 +56,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
   // ================== Cycle through data ==================
   // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
   var fiveMinCycler = function(){};
+  var colorInterpolater = function(){};
   window.onload = function(e){ 
     setTimeout( () => {
       fiveMinCycler = setInterval(drawPolylines, animationCycle);
-    }, 1000)
+    }, 100)
   }
 
   function drawPolylines(){
-    time = times[count]
+    console.log('DRAW');
+    let time = times[count]
 
     filteredData = data.filter(d => d.data_as_of.indexOf( `${time}` ) !== -1  )
 
@@ -83,7 +85,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
               map: map
             });  
 
-      // Interpolation      
+      // Interpolation variables      
       var step = 0;
       var numSteps = 100; //Change this to set animation resolution
       var timePerStep = 50; //Change this to alter animation speed
@@ -91,34 +93,37 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
       let interpolatedOpacity = 0;
       let nextSpeed = data.filter(df => df.data_as_of.indexOf(times[1]) !== -1  && df.link_id === d.link_id)[0].speed;
 
-      console.log(nextSpeed - d.speed);
+      console.log('start opacity interpolation');
 
-      let opacityInterpolater = setInterval(function() {
-         step += 1;
-         if (step > numSteps) {
-            step = 0;
-            setInterval(colorInterpolater, timePerStep)
-            
-            return clearInterval(opacityInterpolater);
-         } else {
-            interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-            customPath.setOptions({strokeOpacity: interpolatedOpacity});
-         }
-      }, timePerStep);
-
-      let colorInterpolater = function(){
-         step += 1;
-         if (step > numSteps) {
-            clearInterval(interpolater);
-         } else {
-            if (count === 0){
+      // First fade in the polylines, when complete move to the colorInterpolater()
+      if (times[0] === startTime ){
+        let opacityInterpolater = setInterval(function() {
+           if (step++ > numSteps) {
+              console.log('start color interpolation');
+              step = 0;
+              colorInterpolater = setInterval(colorStepFunction, 10)
               
-            }
-            interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed - 50) )(step/numSteps);
+              return clearInterval(opacityInterpolater);
+           } else {
+              interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
+              customPath.setOptions({strokeOpacity: interpolatedOpacity});
+           }
+        }, timePerStep);
+      } else {
+        console.log('start color interpolation')
+        setInterval(colorInterpolater, 10)
+      }
+
+      function colorStepFunction(){
+         if (step++ > numSteps) {
+            console.log('END color interpolation');
+            return clearInterval(colorInterpolater);
+         } else {
+            interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
             customPath.setOptions({strokeColor: interpolatedColor})
          }
       };
-    });
+    }); // End filteredData.forEach()
 
     // TEMP CLEAR
     return clearInterval(fiveMinCycler); // Stop setInterval calls

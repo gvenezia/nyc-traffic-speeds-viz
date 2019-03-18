@@ -2,6 +2,15 @@ import * as d3 from 'd3';
 
 import { mapStyles } from './google-map-styles.js';
 
+// How long should each 5m period last in the viz?
+let animationCycle = 1500;
+
+// Starting date and time
+let date = '2/16';
+let endDate = '2/16';
+let time = '11:33';
+let endTime = '11:38';
+
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
   zoom: 10,
@@ -38,10 +47,22 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
   let filteredData = [];
   let decodedPath = '';
   let customPath = {};
+  let times = ['11:33', '11:38'];
+  let count = 0;
 
-  function drawPolylines(date){
-    console.log(data);
-    filteredData = data.filter(d => d.data_as_of.indexOf( '11:38' ) !== -1  )
+  // ================== Cycle through data ==================
+  // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
+  var fiveMinCycler = function(){};
+  window.onload = function(e){ 
+    setTimeout( () => {
+      fiveMinCycler = setInterval(drawPolylines, animationCycle);
+    }, 1000)
+  }
+
+  function drawPolylines(){
+    time = times[count++]
+
+    filteredData = data.filter(d => d.data_as_of.indexOf( `${time}` ) !== -1  )
 
     console.log(filteredData);
 
@@ -56,13 +77,19 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
               strokeColor: color(d.speed),
               strokeOpacity: 1.0,
               strokeWeight: 5
-            });
+            });  
+
+      // Interpolation      
 
       // Draw the path
       customPath.setMap(map)
     });
-  }
 
-  drawPolylines();
+    // Specific time for an event (like projected totals popping up)
+    if ( time === endTime ){
+      // Then stop the animation
+      return clearInterval(fiveMinCycler); // Stop setInterval calls
+    } 
+  }
   
 }); // End d3.json  

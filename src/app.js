@@ -46,25 +46,13 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
 
   // ====== Polyline ======
   let filteredData = [];
-  let decodedPath = '';
-  let customPath = {};
   let count = 0;
-  let interpolater = null;
   let currHour = startHour;
   let currMin = startMin;
   let time = startTime;
+  let polylinesArr = [];
 
   drawPolylines()
-
-  // ================== Cycle through data ==================
-  // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
-  // let fiveMinCycler; // `let` ensures that if in the future fiveMinCycler is called more than once, it will receive a unique `intervalId` for each consecutive call in the scope
-
-  // window.onload = function(e){ 
-  //   setTimeout( () => {
-  //     fiveMinCycler = setInterval(drawPolylines, animationCycle);
-  //   }, 100)
-  // }
 
   function drawPolylines(){
     // Check usable time variable
@@ -75,47 +63,51 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
 
     console.log('DRAW');
 
-    filteredData = data.filter(d => d.data_as_of.indexOf( time ) !== -1  )
+    filteredData = data.filter( d => d.data_as_of.indexOf( time ) !== -1  )
 
     console.log(filteredData);
 
-    filteredData.forEach(d => {
-      // Decode the given polyline with geometry library
-      decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
-
-      // set the polyline
-      let customPath = new google.maps.Polyline({
-              path: decodedPath,
-              geodesic: true,
-              strokeColor: color(d.speed),
-              strokeOpacity: 0,
-              strokeWeight: 5,
-              map
-            });  
-
+    filteredData.forEach( (d,i) => {
       // Interpolation variables      
       var step = 0;
       var numSteps = 100; //Change this to set animation resolution
-      var timePerStep = 50; //Change this to alter animation speed
+      var timePerStep = 10; //Change this to alter animation speed
       let interpolatedColor = '';
       let interpolatedOpacity = 0;
-      console.log(data.filter(df => df.data_as_of.indexOf( `${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
-      let nextSpeed = data.filter(df => df.data_as_of.indexOf( `${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id)[0].speed;
+      console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
+      let nextTimePeriod = data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id);  
+      let nextSpeed = nextTimePeriod.length > 0 ? nextTimePeriod[0].speed : d.speed;
+
 
       console.log('start opacity interpolation');
 
-      // First fade in the polylines, when complete move to the colorInterpolater()
+      // If at beginning of cycle, then declare the polyline paths, fade them in, and then call colorInterpolater()
       if (time === startTime ){
+        // Decode the given polyline with geometry library
+        let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
+
+        // set the polyline
+        let customPath = new google.maps.Polyline({
+                path: decodedPath,
+                geodesic: true,
+                strokeColor: color(d.speed),
+                strokeOpacity: 0,
+                strokeWeight: 5,
+                map
+              }); 
+        // push polyline to array
+        polylinesArr.push(customPath);
+
         let opacityInterpolaterId = setInterval( () => {
            if (step++ > numSteps) {
               console.log('start color interpolation');
               step = 0;
-              colorInterpolater()
+              // colorInterpolater()
               
               return clearInterval(opacityInterpolaterId);
            } else {
               interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-              customPath.setOptions({strokeOpacity: interpolatedOpacity});
+              polylinesArr[i].setOptions({strokeOpacity: interpolatedOpacity});
            }
         }, timePerStep);
       } else {
@@ -133,7 +125,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
             
           } else {
             interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
-            customPath.setOptions({strokeColor: interpolatedColor})
+            polylinesArr[i].setOptions({strokeColor: interpolatedColor})
           }
         }, timePerStep);  
       }

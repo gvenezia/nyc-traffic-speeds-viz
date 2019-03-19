@@ -9,6 +9,8 @@ html, body, #map {
   position: absolute;
   fill: #F4F4F4;
   color: #F4F4F4;;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 svg {
@@ -16,21 +18,35 @@ svg {
   pointer-events: none;
 }
 
-#info-container {
-  padding: 10px;
-  width: 25%;
-  height: 100%;
-  position: absolute;
-}
-
-#map {
-  position: absolute;
-  left: 25%;
-}
-
+/* CLASSES */
 .title {
   font-weight: 300;
   font-size: 30px;
   fill: #FF8700;
   line-height: 36px;
 }
+
+/* ID'S */
+#info-container {
+  margin: 20px;
+  width: 25%;
+  height: 100%;
+  /*top: 0;
+  left: 0;*/
+  position: absolute;
+}
+
+#map {
+  position: absolute;
+  left: 25%;
+  width: 75%;
+}
+
+#source-text {
+  position: absolute;
+  bottom: 20px;
+  color: #ddd;
+  font-size: 10px;
+  font-style: italic;
+}
+

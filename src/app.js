@@ -6,10 +6,14 @@ import { mapStyles } from './google-map-styles.js';
 let animationCycle = 1500;
 
 // Starting date and time
-let date = '2/16';
-let endDate = '2/16';
-let startTime = '11:33';
-let endTime = '11:38';
+let date = '2/16',
+    endDate = '2/16',
+    startHour = 11,
+    startMin = 8,
+    startTime = `${startHour}:${startMin < 10 ? '0' + startMin.toString() : startMin}`,
+    endHour = 11,
+    endMin = 38,
+    endTime = `${endHour}:${endMin}`;
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
@@ -23,7 +27,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, data) {
+d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, data) {
   if (error) throw error;
 
   // format data 
@@ -40,32 +44,40 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
     .domain([minSpeed, maxSpeed/2, maxSpeed])
     .range(["#b20035", "#ffef19", "#00cc7a"]);
 
-  // Filter data for the current time
-  // data.filter
-
   // ====== Polyline ======
   let filteredData = [];
   let decodedPath = '';
   let customPath = {};
-  let times = ['11:33', '11:38'];
   let count = 0;
   let interpolater = null;
+  let currHour = startHour;
+  let currMin = startMin;
+  let time = startTime;
+
+  drawPolylines()
 
   // ================== Cycle through data ==================
   // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
-  var fiveMinCycler;
+  // let fiveMinCycler; // `let` ensures that if in the future fiveMinCycler is called more than once, it will receive a unique `intervalId` for each consecutive call in the scope
 
-  window.onload = function(e){ 
-    setTimeout( () => {
-      fiveMinCycler = setInterval(drawPolylines, animationCycle);
-    }, 100)
-  }
+  // window.onload = function(e){ 
+  //   setTimeout( () => {
+  //     fiveMinCycler = setInterval(drawPolylines, animationCycle);
+  //   }, 100)
+  // }
 
   function drawPolylines(){
-    console.log('DRAW');
-    let time = times[count]
+    // Check usable time variable
+    if ( time === endTime ){
+      // Then stop the animation
+      return 0;
+    } 
 
-    filteredData = data.filter(d => d.data_as_of.indexOf( `${time}` ) !== -1  )
+    console.log('DRAW');
+
+    filteredData = data.filter(d => d.data_as_of.indexOf( time ) !== -1  )
+
+    console.log(filteredData);
 
     filteredData.forEach(d => {
       // Decode the given polyline with geometry library
@@ -84,15 +96,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
       // Interpolation variables      
       var step = 0;
       var numSteps = 100; //Change this to set animation resolution
-      var timePerStep = 5; //Change this to alter animation speed
+      var timePerStep = 50; //Change this to alter animation speed
       let interpolatedColor = '';
       let interpolatedOpacity = 0;
-      let nextSpeed = data.filter(df => df.data_as_of.indexOf(times[1]) !== -1  && df.link_id === d.link_id)[0].speed;
+      console.log(data.filter(df => df.data_as_of.indexOf( `${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
+      let nextSpeed = data.filter(df => df.data_as_of.indexOf( `${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id)[0].speed;
 
       console.log('start opacity interpolation');
 
       // First fade in the polylines, when complete move to the colorInterpolater()
-      if (times[0] === startTime ){
+      if (time === startTime ){
         let opacityInterpolaterId = setInterval( () => {
            if (step++ > numSteps) {
               console.log('start color interpolation');
@@ -124,18 +137,25 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
           }
         }, timePerStep);  
       }
-      
 
     }); // End filteredData.forEach()
 
-    // TEMP CLEAR
-    return clearInterval(fiveMinCycler); // Stop setInterval calls
+    if (currMin + 5 >= 60){
+      if (currHour + 1 >= 24){
+        // Add to date
+        currHour = 0;
+        currMin = ((currMin + 5) % 60);  
+      } else {
+        currHour++;
+        currMin = ((currMin + 5) % 60);  
+      }
+    } else {
+      currMin += 5;
+    }
 
-    // Specific time for an event (like projected totals popping up)
-    if ( time === endTime ){
-      // Then stop the animation
-      return clearInterval(fiveMinCycler); // Stop setInterval calls
-    } 
-  }
+    time = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`
+
+    drawPolylines();
+  } // End drawPolylines()
   
 }); // End d3.json  

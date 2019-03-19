@@ -5,6 +5,10 @@ import { mapStyles } from './google-map-styles.js';
 // How long should each 5m period last in the viz?
 let animationCycle = 1500;
 
+// Interpolater variables
+const numSteps = 100; //Change this to set animation resolution
+const timePerStep = 10; //Change this to alter animation speed
+
 // Starting date and time
 let date = '2/16',
     endDate = '2/16',
@@ -46,108 +50,173 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
 
   // ====== Polyline ======
   let filteredData = [];
-  let count = 0;
-  let currHour = startHour;
-  let currMin = startMin;
-  let time = startTime;
   let polylinesArr = [];
+  let intervalCount = 0;
 
-  drawPolylines()
+  console.log('SETUP');
 
-  function drawPolylines(){
+  filteredData = data.filter( d => d.data_as_of.indexOf( startTime ) !== -1  )
+
+  filteredData.forEach( (d,i) => {
+    // Interpolation variables      
+    let step = 0;
+
+    console.log('start opacity interpolation');
+
+    // Decode the given polyline with geometry library
+    let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
+
+    // set the polyline
+    let customPath = new google.maps.Polyline({
+            path: decodedPath,
+            geodesic: true,
+            strokeColor: color(d.speed),
+            strokeOpacity: 0,
+            strokeWeight: 5,
+            map
+          }); 
+    // push polyline to array
+    polylinesArr.push(customPath);
+
+    let opacityInterpolaterId = setInterval( () => {
+       if (step++ > numSteps) {
+          console.log('END OPACITY INTERVALS');
+          
+          if (++intervalCount === filteredData.length)
+            moveToNextPeriod(startHour, startMin)
+          
+          return clearInterval(opacityInterpolaterId);
+       } else {
+          let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
+          polylinesArr[i].setOptions({strokeOpacity: interpolatedOpacity});
+       }
+    }, timePerStep);
+  }); // End filteredData.forEach()
+
+  // setTimeout( moveToNextPeriodBrute, 5000);
+
+  function moveToNextPeriodBrute(){
+    console.log('start BRUTE');
+    filteredData = data.filter( d => d.data_as_of.indexOf( '11:08' ) !== -1  )
+
+    let intervalCount = 0;
+
+    filteredData.forEach( (d,i) => {
+
+      // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
+      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `11:13` ) !== -1  && df.link_id === d.link_id);  
+      let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
+
+      let step = 0;
+
+      // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+      // setInterval is called for each of the datapoints in the filteredData
+      let colorInterpolaterId = setInterval( () => {
+        if (step++ > numSteps) {
+          console.log('END color interpolation');
+
+          if (++intervalCount === filteredData.length)
+            moveToNextPeriodBrute2(startHour, startMin)
+
+          return clearInterval(colorInterpolaterId);
+          
+        } else {
+          let interpolatedColor = d3.interpolateRgb( color(d.speed+30), color(nextSpeed -30 ) )(step/numSteps);
+          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+        }
+      }, timePerStep);  
+    });
+  }
+
+  function moveToNextPeriodBrute2(){
+    console.log('start BRUTE2');
+    filteredData = data.filter( d => d.data_as_of.indexOf( '11:13' ) !== -1  )
+
+    filteredData.forEach( (d,i) => {
+
+      // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
+      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `11:18` ) !== -1  && df.link_id === d.link_id);  
+      let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
+
+      let step = 0;
+      // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+      // setInterval is called for each of the datapoints in the filteredData
+      let colorInterpolaterId = setInterval( () => {
+        if (step++ > numSteps) {
+          console.log('END color interpolation');
+
+          // if (++intervalCount === filteredData.length)
+          //   moveToNextPeriodBrute2(startHour, startMin)
+
+          return clearInterval(colorInterpolaterId);
+          
+        } else {
+          let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed +30 ) )(step/numSteps);
+          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+        }
+      }, timePerStep);  
+    });
+  }
+
+
+  function moveToNextPeriod(prevHour, prevMin){
+    console.log('prevMin is ' + prevMin);
+    console.log('start DYNAMIC NEXT PERIOD');
+    let currHour = 0,
+        currMin = 0;
+
+    if (prevMin + 5 >= 60){
+      if (prevHour + 1 >= 24){
+        // Add to date
+        currHour = 0;
+        currMin = ((prevMin + 5) % 60);  
+      } else {
+        currHour++;
+        currMin = ((prevMin + 5) % 60);  
+      }
+    } else {
+      currHour = prevHour;
+      currMin = prevMin + 5;
+    }
+
+    let newTime = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`;
+
+    console.log('newTime is ' + newTime)
+
     // Check usable time variable
-    if ( time === endTime ){
+    if ( newTime === endTime ){
       // Then stop the animation
+      console.log('End Animation');
       return 0;
     } 
 
-    console.log('DRAW');
-
-    filteredData = data.filter( d => d.data_as_of.indexOf( time ) !== -1  )
-
-    console.log(filteredData);
+    let filteredData = data.filter( d => d.data_as_of.indexOf( newTime ) !== -1  )
+    let intervalCount = 0;
 
     filteredData.forEach( (d,i) => {
-      // Interpolation variables      
-      var step = 0;
-      var numSteps = 100; //Change this to set animation resolution
-      var timePerStep = 10; //Change this to alter animation speed
-      let interpolatedColor = '';
-      let interpolatedOpacity = 0;
-      console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
-      let nextTimePeriod = data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id);  
-      let nextSpeed = nextTimePeriod.length > 0 ? nextTimePeriod[0].speed : d.speed;
+      // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
+      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id);  
+      let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
 
+      let step = 0;
+      // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+      // setInterval is called for each of the datapoints in the filteredData
+      let colorInterpolaterId = setInterval( () => {
+        if (step++ > numSteps) {
+          console.log('END color interpolation');
+          if (++intervalCount === filteredData.length)
+            moveToNextPeriod(currHour, currMin)
+          return clearInterval(colorInterpolaterId);
+          
+        } else {
+          let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
+          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+        }
+      }, timePerStep);  
+    })
 
-      console.log('start opacity interpolation');
-
-      // If at beginning of cycle, then declare the polyline paths, fade them in, and then call colorInterpolater()
-      if (time === startTime ){
-        // Decode the given polyline with geometry library
-        let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
-
-        // set the polyline
-        let customPath = new google.maps.Polyline({
-                path: decodedPath,
-                geodesic: true,
-                strokeColor: color(d.speed),
-                strokeOpacity: 0,
-                strokeWeight: 5,
-                map
-              }); 
-        // push polyline to array
-        polylinesArr.push(customPath);
-
-        let opacityInterpolaterId = setInterval( () => {
-           if (step++ > numSteps) {
-              console.log('start color interpolation');
-              step = 0;
-              // colorInterpolater()
-              
-              return clearInterval(opacityInterpolaterId);
-           } else {
-              interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-              polylinesArr[i].setOptions({strokeOpacity: interpolatedOpacity});
-           }
-        }, timePerStep);
-      } else {
-        console.log('start color interpolation2');
-        colorInterpolater()
-      }
-
-      function colorInterpolater() {
-        // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
-        // setInterval is called for each of the datapoints in the filteredData
-        let colorInterpolaterId = setInterval( () => {
-          if (step++ > numSteps) {
-            console.log('END color interpolation');
-            return clearInterval(colorInterpolaterId);
-            
-          } else {
-            interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
-            polylinesArr[i].setOptions({strokeColor: interpolatedColor})
-          }
-        }, timePerStep);  
-      }
-
-    }); // End filteredData.forEach()
-
-    if (currMin + 5 >= 60){
-      if (currHour + 1 >= 24){
-        // Add to date
-        currHour = 0;
-        currMin = ((currMin + 5) % 60);  
-      } else {
-        currHour++;
-        currMin = ((currMin + 5) % 60);  
-      }
-    } else {
-      currMin += 5;
-    }
-
-    time = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`
-
-    drawPolylines();
-  } // End drawPolylines()
+    
+    
+  } // End moveToNextPeriod()
   
 }); // End d3.json  

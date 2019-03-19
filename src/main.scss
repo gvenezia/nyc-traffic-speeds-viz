@@ -16,16 +16,15 @@ svg {
   pointer-events: none;
 }
 
-
-
-#map {
+#info-container {
+  padding: 10px;
+  width: 25%;
   position: absolute;
 }
 
-.h1desktop {
-  font-weight: 300;
-  font-size: 24px;
-  line-height: 36px;
+#map {
+  position: absolute;
+  left: 25%;
 }
 
 .title {
@@ -33,15 +32,4 @@ svg {
   font-size: 30px;
   fill: #FF8700;
   line-height: 36px;
-}
-
-.stations, .stations svg {
-  position: absolute;
-}
-
-.stations svg {
-  width: 800px;
-  height: 800px;
-  padding-right: 300px;
-  font: 10px "Muli";
 }

@@ -16,7 +16,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   zoom: 10,
   minZoom: 11,
   maxZoom: 16,
-  center: new google.maps.LatLng(40.7224364,-73.9909218),
+  center: new google.maps.LatLng(40.7224364,-73.8909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
   styles: mapStyles.nightModeUncluttered

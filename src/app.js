@@ -13,8 +13,8 @@ let endTime = '11:38';
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 10,
-  minZoom: 11,
+  zoom: 11,
+  minZoom: 10,
   maxZoom: 16,
   center: new google.maps.LatLng(40.7224364,-73.8909218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -40,8 +40,6 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
     .domain([minSpeed, maxSpeed/2, maxSpeed])
     .range(["#b20035", "#ffef19", "#00cc7a"]);
 
-  console.log(color(40));
-
   // Filter data for the current time
   // data.filter
 
@@ -55,8 +53,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
 
   // ================== Cycle through data ==================
   // Start the hour cycler once the map has loaded (make sure the video can start on a loaded page)
-  var fiveMinCycler = function(){};
-  var colorInterpolater = function(){};
+  var fiveMinCycler;
+
   window.onload = function(e){ 
     setTimeout( () => {
       fiveMinCycler = setInterval(drawPolylines, animationCycle);
@@ -69,10 +67,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
 
     filteredData = data.filter(d => d.data_as_of.indexOf( `${time}` ) !== -1  )
 
-    console.log(filteredData);
-
     filteredData.forEach(d => {
-      // Decode the given polyline with google maps geometry library
+      // Decode the given polyline with geometry library
       decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
 
       // set the polyline
@@ -82,13 +78,13 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
               strokeColor: color(d.speed),
               strokeOpacity: 0,
               strokeWeight: 5,
-              map: map
+              map
             });  
 
       // Interpolation variables      
       var step = 0;
       var numSteps = 100; //Change this to set animation resolution
-      var timePerStep = 50; //Change this to alter animation speed
+      var timePerStep = 5; //Change this to alter animation speed
       let interpolatedColor = '';
       let interpolatedOpacity = 0;
       let nextSpeed = data.filter(df => df.data_as_of.indexOf(times[1]) !== -1  && df.link_id === d.link_id)[0].speed;
@@ -97,32 +93,39 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_33-38-f.csv", function(error, dat
 
       // First fade in the polylines, when complete move to the colorInterpolater()
       if (times[0] === startTime ){
-        let opacityInterpolater = setInterval(function() {
+        let opacityInterpolaterId = setInterval( () => {
            if (step++ > numSteps) {
               console.log('start color interpolation');
               step = 0;
-              colorInterpolater = setInterval(colorStepFunction, 10)
+              colorInterpolater()
               
-              return clearInterval(opacityInterpolater);
+              return clearInterval(opacityInterpolaterId);
            } else {
               interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
               customPath.setOptions({strokeOpacity: interpolatedOpacity});
            }
         }, timePerStep);
       } else {
-        console.log('start color interpolation')
-        setInterval(colorInterpolater, 10)
+        console.log('start color interpolation2');
+        colorInterpolater()
       }
 
-      function colorStepFunction(){
-         if (step++ > numSteps) {
+      function colorInterpolater() {
+        // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+        // setInterval is called for each of the datapoints in the filteredData
+        let colorInterpolaterId = setInterval( () => {
+          if (step++ > numSteps) {
             console.log('END color interpolation');
-            return clearInterval(colorInterpolater);
-         } else {
+            return clearInterval(colorInterpolaterId);
+            
+          } else {
             interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
             customPath.setOptions({strokeColor: interpolatedColor})
-         }
-      };
+          }
+        }, timePerStep);  
+      }
+      
+
     }); // End filteredData.forEach()
 
     // TEMP CLEAR

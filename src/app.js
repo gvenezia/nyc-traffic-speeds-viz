@@ -95,7 +95,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_2000_3-19-f.csv", function(error, data
   // setTimeout( moveToNextPeriodBrute, 5000);
 
   function moveToNextPeriod(prevHour, prevMin, prevData){
-    console.log('start DYNAMIC NEXT PERIOD');
+    console.log('start next 5m batch animation');
     let filteredData = [],
         addMin = 0,
         currHour = prevHour,

@@ -7,7 +7,7 @@ let animationCycle = 1500;
 
 // Interpolater variables
 const numSteps = 100; //Change this to set animation resolution
-const timePerStep = 10; //Change this to alter animation speed
+const timePerStep = 5; //Change this to alter animation speed
 
 // Starting date and time
 let startHour = 19,
@@ -98,79 +98,65 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_2000_3-19-f.csv", function(error, data
     console.log('start DYNAMIC NEXT PERIOD');
     let filteredData = [],
         addMin = 0,
-        currHour = 0,
+        currHour = prevHour,
         currMin = 0;
 
     // batch the next 5 mins for one filteredData call after `while` loop
     while (++addMin <= 5){
-      if (prevMin + addMin >= 60){
-        if (prevHour + 1 >= 24){
-          // day += 1;
+      if (prevMin + addMin === 60){
+        if (prevHour + 1 === 24){
           currHour = 0;
-          currMin = ((prevMin + addMin) % 60);  
         } else {
-          currHour++;
-          currMin = ((prevMin + addMin) % 60);  
-        }
-      } else {
-        currHour = prevHour;
-        currMin = prevMin + addMin;
+          currHour++
+        } 
       }
+
+      currMin = ((prevMin + addMin) % 60);
 
       let newTime = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`;
 
       console.log('newTime is ' + newTime)
 
-      // Check usable time variable
-      if ( newTime === endTime ){
-        // Then stop the animation
-        console.log('End Animation');
-        return 0;
-      } 
-
-      // let filteredData = data.filter( d => d.data_as_of.match( `T${currHour}` ) !== -1  )
       let currFilter = data.filter( d => d.data_as_of.indexOf( newTime ) !== -1  )
       if (currFilter.length > 0){
         filteredData = [...filteredData, ...currFilter ];
       }
-      // if (filteredData.length === 0){
-      //   moveToNextPeriod(currHour, currMin);
-      // }
-    }
+    } // End while
 
-    console.log(filteredData);
-    console.log(prevData.find( d => d.link_id === '4616329').speed );
+    // Check usable time variable
+    if ( currHour >= endHour && currMin >= endMin){
+      // Then stop the animation
+      console.log('End Animation');
+      return 0;
+    } 
+
+    // console.log(filteredData);
+    // console.log(prevData.find( d => d.link_id === '4616329').speed );
 
     let intervalCount = 0;
 
-    // filteredData.forEach( (d,i) => {
-    //   // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
-    //   // let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id);  
-    //   // let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
+    filteredData.forEach( (d,i) => {
+      let prevColor = color( prevData.find( pd => pd.link_id === d.link_id ).speed );
+      let nextColor = color(d.speed)
+      let interpolater = d3.interpolateRgb( prevColor, nextColor );
 
-    //   let step = 0;
-    //   // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
-    //   // setInterval is called for each of the datapoints in the filteredData
-    //   let colorInterpolaterId = setInterval( () => {
-    //     if (step++ > numSteps) {
-    //       console.log('END color interpolation');
+      let step = 0;
+      // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+      // setInterval is called for each of the datapoints in the filteredData
+      let colorInterpolaterId = setInterval( () => {
+        if (step++ > numSteps) {
+          console.log('END color interpolation');
 
-    //       if (++intervalCount === filteredData.length)
-    //         moveToNextPeriod(currHour, currMin, filteredData)
+          if (++intervalCount === filteredData.length)
+            moveToNextPeriod(currHour, currMin, filteredData)
 
-    //       return clearInterval(colorInterpolaterId);
+          return clearInterval(colorInterpolaterId);
           
-    //     } else {
-    //       if (i === 0){ 
-    //         console.log('prevData speed = ' + prevData[d.link_id].speed);
-    //         console.log('d speed = ' + d.speed);
-    //       }
-    //       // let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
-    //       let interpolatedColor = d3.interpolateRgb( color(prevData[d.link_id].speed), color(d.speed) )(step/numSteps);
-    //       polylinesObj[d.link_id].setOptions({strokeColor: interpolatedColor});
-    //     }
-    //   }, timePerStep);  
-    // })
+        } else {
+          polylinesObj[d.link_id].setOptions({strokeColor: interpolater(step/numSteps)});
+        }
+      }, timePerStep);  
+    })
     
   } // End moveToNextPeriod()
 

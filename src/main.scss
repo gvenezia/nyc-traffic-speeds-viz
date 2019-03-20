@@ -13,6 +13,10 @@ html, body, #map {
   overflow: hidden;
 }
 
+a {
+  color: #00cc7a;
+}
+
 svg {
   position: absolute;
   pointer-events: none;
@@ -46,7 +50,7 @@ svg {
   position: absolute;
   bottom: 20px;
   color: #ddd;
-  font-size: 10px;
+  font-size: 12px;
   font-style: italic;
 }
 

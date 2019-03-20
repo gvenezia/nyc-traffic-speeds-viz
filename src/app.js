@@ -51,6 +51,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
   // ====== Polyline ======
   let filteredData = [];
   let polylinesArr = [];
+  let polylinesObj = {};
   let intervalCount = 0;
 
   console.log('SETUP');
@@ -76,7 +77,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
             map
           }); 
     // push polyline to array
-    polylinesArr.push(customPath);
+    // polylinesArr.push(customPath);
+    polylinesObj[d.link_id] = customPath;
 
     let opacityInterpolaterId = setInterval( () => {
        if (step++ > numSteps) {
@@ -88,7 +90,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
           return clearInterval(opacityInterpolaterId);
        } else {
           let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-          polylinesArr[i].setOptions({strokeOpacity: interpolatedOpacity});
+          // polylinesArr[i].setOptions({strokeOpacity: interpolatedOpacity});
+          polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
        }
     }, timePerStep);
   }); // End filteredData.forEach()
@@ -97,14 +100,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
 
   function moveToNextPeriodBrute(){
     console.log('start BRUTE');
-    filteredData = data.filter( d => d.data_as_of.indexOf( '11:08' ) !== -1  )
+    filteredData = data.filter( d => d.data_as_of.indexOf( 'T11:08' ) !== -1  )
+
+    console.log(filteredData);
 
     let intervalCount = 0;
 
     filteredData.forEach( (d,i) => {
 
       // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
-      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `11:13` ) !== -1  && df.link_id === d.link_id);  
+      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `T11:13` ) !== -1  && df.link_id === d.link_id);  
       let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
 
       let step = 0;
@@ -116,13 +121,14 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
           console.log('END color interpolation');
 
           if (++intervalCount === filteredData.length)
-            moveToNextPeriodBrute2(startHour, startMin)
+            setTimeout( moveToNextPeriodBrute2(), 2000);
 
           return clearInterval(colorInterpolaterId);
           
         } else {
-          let interpolatedColor = d3.interpolateRgb( color(d.speed+30), color(nextSpeed -30 ) )(step/numSteps);
-          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
+          // polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          polylinesObj[d.link_id].setOptions({strokeColor: interpolatedColor});
         }
       }, timePerStep);  
     });
@@ -130,12 +136,14 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
 
   function moveToNextPeriodBrute2(){
     console.log('start BRUTE2');
-    filteredData = data.filter( d => d.data_as_of.indexOf( '11:13' ) !== -1  )
+    filteredData = data.filter( d => d.data_as_of.indexOf( 'T11:13' ) !== -1  )
+
+    console.log(filteredData);
 
     filteredData.forEach( (d,i) => {
 
       // console.log(data.filter(df => df.data_as_of.indexOf( `T${currHour}:${currMin + 5}` ) !== -1  && df.link_id === d.link_id));
-      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `11:18` ) !== -1  && df.link_id === d.link_id);  
+      let nextFilteredData = data.filter(df => df.data_as_of.indexOf( `T11:18` ) !== -1  && df.link_id === d.link_id);  
       let nextSpeed = nextFilteredData.length > 0 ? nextFilteredData[0].speed : d.speed;
 
       let step = 0;
@@ -151,8 +159,9 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
           return clearInterval(colorInterpolaterId);
           
         } else {
-          let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed +30 ) )(step/numSteps);
-          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
+          // polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          polylinesObj[d.link_id].setOptions({strokeColor: interpolatedColor});
         }
       }, timePerStep);  
     });
@@ -210,7 +219,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_1000_08-38-f.csv", function(error, dat
           
         } else {
           let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
-          polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          // polylinesArr[i].setOptions({strokeColor: interpolatedColor})
+          polylinesObj[d.link_id].setOptions({strokeColor: interpolatedColor});
         }
       }, timePerStep);  
     })

@@ -3,19 +3,19 @@ import * as d3 from 'd3';
 import { mapStyles } from './google-map-styles.js';
 
 // How long should each 5m period last in the viz?
-let animationCycle = 1500;
+// let animationCycle = 1500;
 
 // Interpolater variables
-const numSteps = 100; //Change this to set animation resolution
-const timePerStep = 5; //Change this to alter animation speed
+const numSteps = 5; //Change this to set animation resolution
+const timePerStep = 1; //Change this to alter animation speed
 
 // Starting date and time
-let startHour = 19,
-    startMin = 23,
+let startHour = 5,
+    startMin = 13,
     startTime = `${startHour}:${startMin < 10 ? '0' + startMin.toString() : startMin}`,
-    endHour = 20,
-    endMin = 13,
-    endTime = `${endHour}:${endMin < 10 ? '0' + endMin.toString() : endMin}}`;
+    endHour = 11,
+    endMin = 18,
+    endTime = `${endHour}:${endMin}`;
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
@@ -29,7 +29,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.csv("data/DOT_Traffic_Speeds_NBE_limit_2000_3-19-f.csv", function(error, data) {
+d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, data) {
   if (error) throw error;
 
   // format data 
@@ -136,9 +136,14 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_2000_3-19-f.csv", function(error, data
     let intervalCount = 0;
 
     filteredData.forEach( (d,i) => {
-      let prevColor = color( prevData.find( pd => pd.link_id === d.link_id ).speed );
+      // console.log(prevData);
+      // console.log(prevData.find( pd => pd.link_id === d.link_id ));
+      let pd = prevData.find( pd => pd.link_id === d.link_id );
+      let prevColor = color( pd ? pd.speed : d.speed );
       let nextColor = color(d.speed)
       let interpolater = d3.interpolateRgb( prevColor, nextColor );
+
+      // console.log(prevColor, nextColor);
 
       let step = 0;
       // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)

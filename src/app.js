@@ -7,7 +7,7 @@ import { mapStyles } from './google-map-styles.js';
 
 // Interpolater variables
 const numSteps = 5; //Change this to set animation resolution
-const timePerStep = 1; //Change this to alter animation speed
+const timePerStep = 2; //Change this to alter animation speed
 
 // Starting date and time
 let startHour = 5,
@@ -93,11 +93,26 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   svg.select('rect')
     .attr('x', width - keyW - 20)
-    .attr('y', height - keyH - 40)
+    .attr('y', height - keyH*3)
     .attr('width', keyW)
     .attr('height', keyH)
     // .style('fill', 'orange');
     .style('fill', 'url(#legendColorGradient)');
+
+  var legendScale = d3.scaleLinear()
+        .domain([minSpeed, maxSpeed/2, maxSpeed])
+        .range([0, keyW/2, keyW-1])
+        
+  var yAxis = d3.axisBottom()
+    .scale(legendScale)
+    .ticks(5);
+
+  svg.append("g")
+        // .attr('x', width - keyW - 20)
+        // .attr('y', height - keyH*3)
+        .attr("class", "axis")
+        .attr("transform", `translate(${width - keyW - 20},${height - keyH*2})`)
+        .call(yAxis);
 
   // ====== Polyline ======
   let filteredData = [];

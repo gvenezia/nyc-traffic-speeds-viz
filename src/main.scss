@@ -23,6 +23,15 @@ svg {
 }
 
 /* CLASSES */
+.axis path, .axis line{
+  /*color: white;*/
+  stroke: white;
+}
+
+.axis text{
+  fill: white;
+}
+
 .title {
   font-weight: 300;
   font-size: 30px;

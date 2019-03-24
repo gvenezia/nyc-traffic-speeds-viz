@@ -7,7 +7,7 @@ import { mapStyles } from './google-map-styles.js';
 
 // Interpolater variables
 const numSteps = 5; //Change this to set animation resolution
-const timePerStep = 2; //Change this to alter animation speed
+const timePerStep = 100; //Change this to alter animation speed
 
 // Starting date and time
 let startHour = 5,
@@ -61,6 +61,15 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   let keyH = 30;
   let keyW = 200;
+
+  let clock = svg.append('text')
+      .attr('x', width - 20)
+      .attr('y', 40)
+      .attr('dy', '.31em')
+      .attr('text-anchor', 'end')
+      .attr('font-size', 40)
+      .text(`${startHour}:${startMin}`)
+
 
   // append gradient bar
   let gradient = svg.select('defs')
@@ -164,6 +173,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   function moveToNextPeriod(prevHour, prevMin, prevData){
     console.log('start next 5m batch animation');
+
     let filteredData = [],
         addMin = 0,
         currHour = prevHour,
@@ -182,8 +192,10 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       currMin = ((prevMin + addMin) % 60);
 
       let newTime = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`;
+      // Set the clock with the current batch numbers
+      clock.text(`${newTime}`);
 
-      console.log('newTime is ' + newTime)
+      // console.log('newTime is ' + newTime)
 
       let currFilter = data.filter( d => d.data_as_of.indexOf( newTime ) !== -1  )
       if (currFilter.length > 0){

@@ -8,12 +8,32 @@
     <link href="/dist/main.bundle.css" rel="stylesheet">
   </head>
   <body>
+    
+
+    <!-- <svg width="620" height="120">
+        <defs>
+            <linearGradient id="gradient">        
+                <stop offset="0.0%" stop-color="#90B9AD"></stop>  
+                <stop offset="20%" stop-color="#6D8B6D"></stop>
+                <stop offset="40%" stop-color="#E46460"></stop>
+                <stop offset="60%" stop-color="#EB9263"></stop>
+                <stop offset="80%" stop-color="#F3DF89"></stop> 
+                <stop offset="100%" stop-color="#F3DF89"></stop>
+            </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="600" height="100" fill="url(#gradient)" stroke="black" stroke-width="1" />
+    </svg> -->
     <div id="info-container">
       <h1>NYC Traffic Speeds in Key Corridors</h1>
       <p>The data visualization to the right shows the change in average traffic speeds over time along key corridors in NYC. </p>
       <p id="source-text">Source: <a href="https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9">NYC Open Data NBE (2019)</a></p>
     </div>
     <div id="map"></div>
+    <svg>
+      <defs></defs>
+      <rect></rect>
+    </svg>
+
     <!-- <div id="svg-container"></div> -->
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAESQYv9IoXIqbTDu8q98anB_zm3_OPal0&libraries=geometry" type="text/javascript"></script>

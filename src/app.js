@@ -41,10 +41,63 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   let minSpeed = d3.min(data, d => d.speed),
       maxSpeed = d3.max(data, d => d.speed);
 
+  // Color Scheme for displayed data
+  let customRed = '#b20035',
+      customYellow = "#ffef19",
+      customGreen = "#00cc7a";
+
+
   // Color Scale for traffic speed
   let color = d3.scaleLinear()
     .domain([minSpeed, maxSpeed/2, maxSpeed])
-    .range(["#b20035", "#ffef19", "#00cc7a"]);
+    .range([customRed, customYellow, customGreen]);
+
+  let height = window.innerHeight; 
+  let width = window.innerWidth;
+
+  let svg = d3.select('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+  let keyH = 30;
+  let keyW = 200;
+
+  // append gradient bar
+  let gradient = svg.select('defs')
+     .append('linearGradient')
+     .attr('id', 'legendColorGradient')
+     .attr('width', keyW)
+     .attr('height', keyH)
+     .attr('x1', '0%') // left
+     .attr('y1', '0%')
+     .attr('x2', '100%') // right
+     .attr('y2', '0%')
+     .attr('spreadMethod', 'pad') // final color fills shape beyond end of gradient
+     
+  // Stops need to be added separately otherwise they'll append to one another instead of the linearGradient
+  gradient.append('stop')
+       .attr('offset', '5%')
+       .attr('stop-color', customRed)
+       .attr('stop-opacity', 1)
+  
+  gradient.append('stop')
+       .attr('offset', '50%')
+       .attr('stop-color', customYellow)
+       .attr('stop-opacity', 1)
+  
+  gradient.append('stop')
+       .attr('offset', '95%')
+       .attr('stop-color', customGreen)
+       .attr('stop-opacity', 1)
+       ; 
+
+  svg.select('rect')
+    .attr('x', width - keyW - 20)
+    .attr('y', height - keyH - 40)
+    .attr('width', keyW)
+    .attr('height', keyH)
+    // .style('fill', 'orange');
+    .style('fill', 'url(#legendColorGradient)');
 
   // ====== Polyline ======
   let filteredData = [];

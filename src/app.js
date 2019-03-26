@@ -6,7 +6,7 @@ import { mapStyles } from './google-map-styles.js';
 // let animationCycle = 1500;
 
 // Interpolater variables
-const numSteps = 5; //Change this to set animation resolution
+const numSteps = 50; //Change this to set animation resolution
 const timePerStep = 100; //Change this to alter animation speed
 
 // Starting date and time
@@ -70,6 +70,29 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       .attr('font-size', 40)
       .text(`${startHour}:${startMin}`)
 
+  var clockControl = svg.append('text')
+      .attr('id', 'pause-text')
+      .attr('x', width - 20)
+      .attr('y', 60)
+      .attr('dy', '.31em')
+      .attr('text-anchor', 'end')
+      .attr('font-size', 12)
+      .text(`Pause Animation`)
+      
+  clockControl.on('click', () => {
+        d3.select(this).text( () => {
+          if (d3.select(this).text() === 'Pause Animation')
+            return 'Resume Animation';
+          else 
+            return 'Pause Animation';
+        })
+        console.log('clicked', d3.select(this) );
+        // clearInterval( opacityInterpolaterId)
+        // clearInterval(colorInterpolaterId)
+        return
+      });
+
+  console.log(clockControl);
 
   // append gradient bar
   let gradient = svg.select('defs')

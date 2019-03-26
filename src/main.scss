@@ -56,6 +56,11 @@ svg {
   width: 75%;
 }
 
+#pause-text {
+  pointer-events: all;
+  cursor: pointer;
+}
+
 #source-text {
   position: absolute;
   bottom: 20px;

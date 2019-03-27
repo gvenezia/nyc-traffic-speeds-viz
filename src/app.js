@@ -7,11 +7,11 @@ import { mapStyles } from './google-map-styles.js';
 
 // Interpolater variables
 const numSteps = 50; //Change this to set animation resolution
-const timePerStep = 100; //Change this to alter animation speed
+const timePerStep = 20; //Change this to alter animation speed
 
 // Starting date and time
 let startHour = 5,
-    startMin = 13,
+    startMin = 43,
     startTime = `${startHour}:${startMin < 10 ? '0' + startMin.toString() : startMin}`,
     endHour = 11,
     endMin = 18,
@@ -79,16 +79,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       .attr('font-size', 12)
       .text(`Pause Animation`)
       
-  clockControl.on('click', () => {
+  clockControl.on('click', function(){
         d3.select(this).text( () => {
           if (d3.select(this).text() === 'Pause Animation')
             return 'Resume Animation';
           else 
             return 'Pause Animation';
         })
-        console.log('clicked', d3.select(this) );
+        console.log('clicked', this );
         // clearInterval( opacityInterpolaterId)
-        // clearInterval(colorInterpolaterId)
+        clearInterval(colorInterpolaterId)
         return
       });
 
@@ -133,6 +133,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   var legendScale = d3.scaleLinear()
         .domain([minSpeed, maxSpeed/2, maxSpeed])
+          .nice()
         .range([0, keyW/2, keyW-1])
         
   var yAxis = d3.axisBottom()
@@ -149,7 +150,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   // ====== Polyline ======
   let filteredData = [];
   let polylinesObj = {};
-  let intervalCount = 0;
+  let updatedPolylineCount = 0;
 
   console.log('SETUP');
 
@@ -181,7 +182,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
        if (step++ > numSteps) {
           console.log('END OPACITY INTERVALS');
           
-          if (++intervalCount === filteredData.length)
+          if (++updatedPolylineCount === filteredData.length)
             moveToNextPeriod(startHour, startMin, filteredData)
           
           return clearInterval(opacityInterpolaterId);
@@ -236,7 +237,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
     // console.log(filteredData);
     // console.log(prevData.find( d => d.link_id === '4616329').speed );
 
-    let intervalCount = 0;
+    let updatedPolylineCount = 0;
 
     filteredData.forEach( (d,i) => {
       // console.log(prevData);
@@ -252,10 +253,12 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
       // setInterval is called for each of the datapoints in the filteredData
       let colorInterpolaterId = setInterval( () => {
-        if (step++ > numSteps) {
+        if (typeof polylinesObj[d.link_id] === 'undefined' || 
+            step++ > numSteps) {
           console.log('END color interpolation');
 
-          if (++intervalCount === filteredData.length)
+          // Check for last datum in current period
+          if (i + 1 === filteredData.length)
             moveToNextPeriod(currHour, currMin, filteredData)
 
           return clearInterval(colorInterpolaterId);
@@ -274,7 +277,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   //   console.log(filteredData);
 
-  //   let intervalCount = 0;
+  //   let updatedPolylineCount = 0;
 
   //   filteredData.forEach( (d,i) => {
 
@@ -290,7 +293,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   //       if (step++ > numSteps) {
   //         console.log('END color interpolation');
 
-  //         if (++intervalCount === filteredData.length)
+  //         if (++updatedPolylineCount === filteredData.length)
   //           setTimeout( moveToNextPeriodBrute2(), 2000);
 
   //         return clearInterval(colorInterpolaterId);
@@ -323,7 +326,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   //       if (step++ > numSteps) {
   //         console.log('END color interpolation');
 
-  //         // if (++intervalCount === filteredData.length)
+  //         // if (++updatedPolylineCount === filteredData.length)
   //         //   moveToNextPeriodBrute2(startHour, startMin)
 
   //         return clearInterval(colorInterpolaterId);

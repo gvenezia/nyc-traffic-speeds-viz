@@ -10,9 +10,9 @@ const numSteps = 10; //Change this to set animation resolution
 const timePerStep = 15; //Change this to alter animation speed
 
 // ===== format with padded zeros for matching against dataset date strings
-  function zeroPad(number){
-    return number < 10 ? '0' + number.toString() : number.toString();
-  }
+function zeroPad(number){
+  return number < 10 ? '0' + number.toString() : number.toString();
+}
 
 // Starting date and time
 let startHour = 5,
@@ -33,24 +33,6 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   disableDefaultUI: true,
   styles: mapStyles.nightModeUncluttered
 });
-
-// var marker = new google.maps.Marker({
-//          position: {lat: 40.7224364,lng: -73.9609218},
-//          map: map,
-//          title: 'Example marker'
-//        });
-
-var infowindow = new google.maps.InfoWindow({
-      position: {lat: 40.7224364,lng: -73.9609218},
-      content: 'example text'
-    });
-
-    // Add event listener for info window
-    map.addListener('click', function(){
-      console.log('INFOWINDOW');
-      infowindow.setPosition({lat: 40.7224364,lng: -73.9609218});
-      infowindow.open(map);
-    });
 
 // Load the station data. When the data comes back, create an overlay.
 d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, data) {
@@ -86,6 +68,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   let keyH = 30;
   let keyW = 200;
 
+  // ========= CLOCK ==========
   let clock = svg.append('text')
       .attr('x', width - 20)
       .attr('y', 40)
@@ -118,6 +101,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   console.log(clockControl);
 
+  // ========= KEY ==========
   // append gradient bar
   let gradient = svg.select('defs')
      .append('linearGradient')
@@ -128,24 +112,23 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
      .attr('y1', '0%')
      .attr('x2', '100%') // right
      .attr('y2', '0%')
-     .attr('spreadMethod', 'pad') // final color fills shape beyond end of gradient
+     .attr('spreadMethod', 'pad'); // final color fills shape beyond end of gradient
      
   // Stops need to be added separately otherwise they'll append to one another instead of the linearGradient
   gradient.append('stop')
        .attr('offset', '5%')
        .attr('stop-color', customRed)
-       .attr('stop-opacity', 1)
+       .attr('stop-opacity', 1);
   
   gradient.append('stop')
        .attr('offset', '50%')
        .attr('stop-color', customYellow)
-       .attr('stop-opacity', 1)
+       .attr('stop-opacity', 1);
   
   gradient.append('stop')
        .attr('offset', '95%')
        .attr('stop-color', customGreen)
-       .attr('stop-opacity', 1)
-       ; 
+       .attr('stop-opacity', 1); 
 
   svg.select('rect')
     .attr('x', width - keyW - 20)
@@ -158,7 +141,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   var legendScale = d3.scaleLinear()
         .domain([minSpeed, maxSpeed/2, maxSpeed])
           .nice()
-        .range([0, keyW/2, keyW-1])
+        .range([0, keyW/2, keyW-1]);
         
   var yAxis = d3.axisBottom()
     .scale(legendScale)
@@ -205,7 +188,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
     // Add event listener for info window
     customPath.addListener('click', function(){
-      console.log('INFOWINDOW');
+
       // Thanks to @geocodezip for the explanation of why setPosition is necessary
       // link: https://stackoverflow.com/a/42331525/8585320
       infowindow.setPosition(decodedPath[0]);

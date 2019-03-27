@@ -6,7 +6,7 @@ import { mapStyles } from './google-map-styles.js';
 // let animationCycle = 1500;
 
 // Interpolater variables
-const numSteps = 5; //Change this to set animation resolution
+const numSteps = 10; //Change this to set animation resolution
 const timePerStep = 15; //Change this to alter animation speed
 
 // ===== format with padded zeros for matching against dataset date strings
@@ -27,11 +27,30 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   zoom: 11,
   minZoom: 10,
   maxZoom: 16,
+  gestureHandling: 'greedy',
   center: new google.maps.LatLng(40.7224364,-73.9609218),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   disableDefaultUI: true,
   styles: mapStyles.nightModeUncluttered
 });
+
+// var marker = new google.maps.Marker({
+//          position: {lat: 40.7224364,lng: -73.9609218},
+//          map: map,
+//          title: 'Example marker'
+//        });
+
+var infowindow = new google.maps.InfoWindow({
+      position: {lat: 40.7224364,lng: -73.9609218},
+      content: 'example text'
+    });
+
+    // Add event listener for info window
+    map.addListener('click', function(){
+      console.log('INFOWINDOW');
+      infowindow.setPosition({lat: 40.7224364,lng: -73.9609218});
+      infowindow.open(map);
+    });
 
 // Load the station data. When the data comes back, create an overlay.
 d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, data) {
@@ -179,6 +198,20 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
             strokeWeight: 5,
             map
           }); 
+
+    let infowindow = new google.maps.InfoWindow({
+      content: 'example text'
+    });
+
+    // Add event listener for info window
+    customPath.addListener('click', function(){
+      console.log('INFOWINDOW');
+      // Thanks to @geocodezip for the explanation of why setPosition is necessary
+      // link: https://stackoverflow.com/a/42331525/8585320
+      infowindow.setPosition(decodedPath[0]);
+      infowindow.open(map);
+    });
+
     // push polyline to array
     // polylinesArr.push(customPath);
     polylinesObj[d.link_id] = customPath;

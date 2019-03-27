@@ -7,7 +7,7 @@ import { mapStyles } from './google-map-styles.js';
 
 // Interpolater variables
 const numSteps = 50; //Change this to set animation resolution
-const timePerStep = 20; //Change this to alter animation speed
+const timePerStep = 100; //Change this to alter animation speed
 
 // Starting date and time
 let startHour = 5,
@@ -196,8 +196,6 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   // setTimeout( moveToNextPeriodBrute, 5000);
 
   function moveToNextPeriod(prevHour, prevMin, prevData){
-    console.log('start next 5m batch animation');
-
     let filteredData = [],
         addMin = 0,
         currHour = prevHour,
@@ -219,8 +217,6 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       // Set the clock with the current batch numbers
       clock.text(`${newTime}`);
 
-      // console.log('newTime is ' + newTime)
-
       let currFilter = data.filter( d => d.data_as_of.indexOf( newTime ) !== -1  )
       if (currFilter.length > 0){
         filteredData = [...filteredData, ...currFilter ];
@@ -234,23 +230,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       return 0;
     } 
 
-    // console.log(filteredData);
-    // console.log(prevData.find( d => d.link_id === '4616329').speed );
-
-    let updatedPolylineCount = 0;
+    console.log('start animation for: ' + `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`)
 
     filteredData.forEach( (d,i) => {
-      // console.log(prevData);
-      // console.log(prevData.find( pd => pd.link_id === d.link_id ));
       let pd = prevData.find( pd => pd.link_id === d.link_id );
       let prevColor = color( pd ? pd.speed : d.speed );
       let nextColor = color(d.speed)
       let interpolater = d3.interpolateRgb( prevColor, nextColor );
-
-      // console.log(prevColor, nextColor);
-
       let step = 0;
-      // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
+
+      // Must be declared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
       // setInterval is called for each of the datapoints in the filteredData
       let colorInterpolaterId = setInterval( () => {
         if (typeof polylinesObj[d.link_id] === 'undefined' || 
@@ -270,6 +259,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
     })
     
   } // End moveToNextPeriod()
+
+  // =========== HELPER BRUTE FUNCTIONS FOR TROUBLESHOOTING ===========
 
   //   function moveToNextPeriodBrute(){
   //   console.log('start BRUTE');

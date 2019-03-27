@@ -6,13 +6,18 @@ import { mapStyles } from './google-map-styles.js';
 // let animationCycle = 1500;
 
 // Interpolater variables
-const numSteps = 50; //Change this to set animation resolution
-const timePerStep = 100; //Change this to alter animation speed
+const numSteps = 5; //Change this to set animation resolution
+const timePerStep = 15; //Change this to alter animation speed
+
+// ===== format with padded zeros for matching against dataset date strings
+  function zeroPad(number){
+    return number < 10 ? '0' + number.toString() : number.toString();
+  }
 
 // Starting date and time
 let startHour = 5,
-    startMin = 43,
-    startTime = `${startHour}:${startMin < 10 ? '0' + startMin.toString() : startMin}`,
+    startMin = 13,
+    startTime = `${zeroPad(startHour)}:${zeroPad(startMin)}`,
     endHour = 11,
     endMin = 18,
     endTime = `${endHour}:${endMin}`;
@@ -68,7 +73,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       .attr('dy', '.31em')
       .attr('text-anchor', 'end')
       .attr('font-size', 40)
-      .text(`${startHour}:${startMin}`)
+      .text(`${zeroPad(startHour)}:${zeroPad(startMin)}`)
 
   var clockControl = svg.append('text')
       .attr('id', 'pause-text')
@@ -154,7 +159,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   console.log('SETUP');
 
-  filteredData = data.filter( d => d.data_as_of.indexOf( startTime ) !== -1  )
+  filteredData = data.filter( d => d.data_as_of.indexOf( `T${startTime}` ) !== -1  )
 
   filteredData.forEach( (d,i) => {
     // Interpolation variables      
@@ -213,11 +218,11 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
       currMin = ((prevMin + addMin) % 60);
 
-      let newTime = `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`;
+      let newTime = `${zeroPad(currHour)}:${zeroPad(currMin)}`;
       // Set the clock with the current batch numbers
       clock.text(`${newTime}`);
 
-      let currFilter = data.filter( d => d.data_as_of.indexOf( newTime ) !== -1  )
+      let currFilter = data.filter( d => d.data_as_of.indexOf( `T${newTime}` ) !== -1  )
       if (currFilter.length > 0){
         filteredData = [...filteredData, ...currFilter ];
       }
@@ -230,7 +235,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       return 0;
     } 
 
-    console.log('start animation for: ' + `${currHour}:${currMin < 10 ? '0' + currMin.toString() : currMin}`)
+    console.log('start animation for: ' + `${zeroPad(currHour)}:${zeroPad(currMin)}`)
 
     filteredData.forEach( (d,i) => {
       let pd = prevData.find( pd => pd.link_id === d.link_id );
@@ -259,6 +264,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
     })
     
   } // End moveToNextPeriod()
+
+
 
   // =========== HELPER BRUTE FUNCTIONS FOR TROUBLESHOOTING ===========
 

@@ -5,28 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC Traffic Data Viz</title>
     <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <link href="/dist/main.bundle.css" rel="stylesheet">
   </head>
   <body>
-    
-
-    <!-- <svg width="620" height="120">
-        <defs>
-            <linearGradient id="gradient">        
-                <stop offset="0.0%" stop-color="#90B9AD"></stop>  
-                <stop offset="20%" stop-color="#6D8B6D"></stop>
-                <stop offset="40%" stop-color="#E46460"></stop>
-                <stop offset="60%" stop-color="#EB9263"></stop>
-                <stop offset="80%" stop-color="#F3DF89"></stop> 
-                <stop offset="100%" stop-color="#F3DF89"></stop>
-            </linearGradient>
-        </defs>
-        <rect x="0" y="0" width="600" height="100" fill="url(#gradient)" stroke="black" stroke-width="1" />
-    </svg> -->
     <div id="info-container">
       <h1>NYC Traffic Speeds in Key Corridors</h1>
       <p>The data visualization to the right shows the change in average traffic speeds over time along key corridors in NYC. </p>
-      <p id="source-text">Source: <a href="https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9">NYC Open Data NBE (2019)</a></p>
+      <p>Explore the data by zooming in/out, clicking on the corridors, and <span>controlling the animation in the top right</span> (in progress) </p>
+      <p>The NYC data updates about every 5 minutes, but sometimes the updates come a minute sooner or later, so each five minute interval is batched together for a consistent animation period for all roads (which is why the clock increments in 5's). </p>
+      <p>Some of the major intersections and corridors have multiple traffic speeds depending on lanes or direction, so zooming into the map will reveal even more detail. For example, the Lincoln Tunnel has three separate traffic speed readings. </p>
+      <p id="source-text">Source: 
+        <a href="https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9">NYC Open Data NBE (2019)&nbsp;  
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+      </p>
     </div>
     <div id="map"></div>
     <svg>

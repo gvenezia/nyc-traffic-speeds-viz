@@ -13,8 +13,13 @@ html, body, #map {
   overflow: hidden;
 }
 
+p span {
+  text-decoration: line-through;
+}
+
 a {
   color: #00cc7a;
+  text-decoration: none;
 }
 
 svg {
@@ -31,6 +36,10 @@ svg {
 .axis text{
   fill: white;
   font-size: 12px;
+}
+
+.infowindow {
+  color: black;
 }
 
 .title {

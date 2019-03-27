@@ -183,7 +183,10 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
           }); 
 
     let infowindow = new google.maps.InfoWindow({
-      content: 'example text'
+      content: `<div class="infowindow">
+          <p>${d.link_name}</p>
+          <p>${d.link_id}</p>
+        </div>`
     });
 
     // Add event listener for info window

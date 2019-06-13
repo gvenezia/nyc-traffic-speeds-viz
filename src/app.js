@@ -191,81 +191,58 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
     // Add event listener for info window
     customPath.addListener('click', function(){
+      infowindow.setPosition(decodedPath[0]);
+      infowindow.open(map);
 
       // Thanks to @geocodezip for the explanation of why setPosition is necessary
       // link: https://stackoverflow.com/a/42331525/8585320
-      infowindow.setPosition(decodedPath[0]);
-      infowindow.open(map);
     });
 
     // push polyline to array
-    // polylinesArr.push(customPath);
     polylinesObj[d.link_id] = customPath;
 
-    let opacityInterpolaterId = setInterval( () => {
-       if (step++ > numSteps) {
-          console.log('END OPACITY INTERVALS');
-          
-          if (++updatedPolylineCount === filteredData.length)
-            moveToNextPeriod(startHour, startMin, filteredData)
-          
-          return clearInterval(opacityInterpolaterId);
-       } else {
-          let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-          polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-       }
-    }, timePerStep);
+    google.maps.event.addListener(map, 'tilesloaded', setTimeout( () => {
+        let opacityInterpolaterId = setInterval( () => {
+           if (step++ > numSteps) {
+              console.log('END OPACITY INTERVALS');
+              
+              if (++updatedPolylineCount === filteredData.length)
+                moveToNextPeriod(startHour, startMin, filteredData)
+              
+              return clearInterval(opacityInterpolaterId);
+           } else {
+              let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
+              polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
+           }
+        }, timePerStep);
 
-    let timeStart = performance.now();
-    let interpolate = d3.interpolate(0,1);
+        // let timeStart = performance.now();
+        // let interpolate = d3.interpolate(0,1);
 
-    var frameTick = now => {
-      if (timePerStep <= now - timeStart){
-        timeStart = now;
+        // var frameTick = now => {
+        //   if (timePerStep <= now - timeStart){
+        //     timeStart = now;
 
-        if (step++ > numSteps) {
-           console.log('END OPACITY INTERVALS');
-           
-           if (++updatedPolylineCount === filteredData.length)
-             moveToNextPeriod(startHour, startMin, filteredData)
-           
-           return clearInterval(opacityInterpolaterId);
-        } else {
-           let interpolatedOpacity = interpolate(step/numSteps);
-           polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-           requestAnimationFrame(frameTick)
-        }
-    } // End frameTick
-    requestAnimationFrame(frameTick)
-       
+        //     if (step++ > numSteps) {
+        //        console.log('END OPACITY INTERVALS');
+               
+        //        if (++updatedPolylineCount === filteredData.length)
+        //          moveToNextPeriod(startHour, startMin, filteredData)
+               
+        //        return clearInterval(opacityInterpolaterId);
+        //     } else {
+        //        let interpolatedOpacity = interpolate(step/numSteps);
+        //        polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
+        //        requestAnimationFrame(frameTick)
+        //     }
+        //   }  
+        // }; // End frameTick
+        // requestAnimationFrame(frameTick)
+      }, 1000)
+    );
 
-       if (step++ > numSteps) {
-          console.log('END OPACITY INTERVALS');
-          
-          if (++updatedPolylineCount === filteredData.length)
-            moveToNextPeriod(startHour, startMin, filteredData)
-          
-          return clearInterval(opacityInterpolaterId);
-       } else {
-          let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-          polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-       }
-    };
+    
 
-
-    let opacityInterpolaterId = setInterval( () => {
-       if (step++ > numSteps) {
-          console.log('END OPACITY INTERVALS');
-          
-          if (++updatedPolylineCount === filteredData.length)
-            moveToNextPeriod(startHour, startMin, filteredData)
-          
-          return clearInterval(opacityInterpolaterId);
-       } else {
-          let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-          polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-       }
-    }, timePerStep);
   }); // End filteredData.forEach()
 
   // setTimeout( moveToNextPeriodBrute, 5000);

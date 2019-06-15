@@ -8,6 +8,7 @@ import { mapStyles } from './google-map-styles.js';
 // Interpolater variables
 const numSteps = 10; //Change this to set animation resolution
 const timePerStep = 15; //Change this to alter animation speed
+const periodDuration = 800;
 
 // ===== format with padded zeros for matching against dataset date strings
 function zeroPad(number){
@@ -165,16 +166,16 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   google.maps.event.addListener(map, 'tilesloaded', 
     setTimeout( () => {
+      console.log('start opacity interpolation');
+
       filteredData.forEach( (d,i) => {
         // Interpolation variables      
         let step = 0;
 
-        console.log('start opacity interpolation');
-
         // Decode the given polyline with geometry library
         let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
 
-        // set the polyline
+        // Set the polyline
         let customPath = new google.maps.Polyline({
                 path: decodedPath,
                 geodesic: true,
@@ -184,6 +185,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
                 map
               }); 
 
+        // Set tooltip
         let infowindow = new google.maps.InfoWindow({
           content: `<div class="infowindow">
               <p>${d.link_name}</p>
@@ -191,7 +193,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
             </div>`
         });
 
-        // Add event listener for info window
+        // Add event listener for tooltip
         customPath.addListener('click', function(){
           infowindow.setPosition(decodedPath[0]);
           infowindow.open(map);
@@ -200,38 +202,39 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
           // link: https://stackoverflow.com/a/42331525/8585320
         });
 
-        // push polyline to array
+        // Push polyline to array
         polylinesObj[d.link_id] = customPath;
 
-        let interpolate = d3.interpolate(1e-6,1);
+        // Set opacity interpolator
+        let interpolateOpacity = d3.interpolate(1e-6,1);
         
         // let opacityInterpolaterId = setInterval( () => {
         //     if (step++ > numSteps && ++updatedPolylineCount === filteredData.length) {
         //       console.log('END OPACITY INTERVALS');
-        //       requestAnimationFrame( now => {
+        //       requestAnimationFrame( timestamp => {
         //         moveToNextPeriod(startHour, startMin, filteredData)
         //       });
         //       return clearInterval(opacityInterpolaterId);
         //     } 
         //     polylinesObj[d.link_id].setOptions({
-        //       strokeOpacity: interpolate(step/numSteps)
+        //       strokeOpacity: interpolateOpacity(step/numSteps)
         //     });
         // }, timePerStep);
 
-        const duration = 800;
         let start = performance.now();
 
-        let frameTick = now => {
-          let progress = now - start;
+        let frameTick = timestamp => {
+          let progress = timestamp - start;
 
-          if (progress > duration && ++updatedPolylineCount === filteredData.length){
+          if (progress > periodDuration && 
+              ++updatedPolylineCount === filteredData.length){
             console.log('END OPACITY INTERVALS');
-            return requestAnimationFrame( now => {
-              moveToNextPeriod(startHour, startMin, filteredData)
+            return requestAnimationFrame( timestamp => {
+              moveToNextPeriod(timestamp, startHour, startMin, filteredData)
             });
           }
           polylinesObj[d.link_id].setOptions({
-              strokeOpacity: interpolate(progress/duration)
+              strokeOpacity: interpolateOpacity(progress/periodDuration)
             });
           requestAnimationFrame(frameTick);
         }
@@ -243,7 +246,10 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   // setTimeout( moveToNextPeriodBrute, 5000);
 
-  function moveToNextPeriod(prevHour, prevMin, prevData){
+  function moveToNextPeriod(timestamp, prevHour, prevMin, prevData){
+    let start = timestamp;
+
+    console.log(start);
     let filteredData = [],
         addMin = 0,
         currHour = prevHour,
@@ -284,7 +290,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       let pd = prevData.find( pd => pd.link_id === d.link_id );
       let prevColor = color( pd ? pd.speed : d.speed );
       let nextColor = color(d.speed)
-      let interpolater = d3.interpolateRgb( prevColor, nextColor );
+      let interpolateRGB = d3.interpolateRgb( prevColor, nextColor );
       let step = 0;
 
       // Must be declared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
@@ -296,19 +302,19 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
           // Check for last datum in current period
           if (i + 1 === filteredData.length)
-            requestAnimationFrame( now => {
-              moveToNextPeriod(currHour, currMin, filteredData)
+            requestAnimationFrame( timestamp => {
+              moveToNextPeriod(timestamp, currHour, currMin, filteredData)
             });
 
           return clearInterval(colorInterpolaterId);
           
         } else {
-          polylinesObj[d.link_id].setOptions({strokeColor: interpolater(step/numSteps)});
+          polylinesObj[d.link_id].setOptions({strokeColor: interpolateRGB(step/numSteps)});
         }
-      }, timePerStep); 
+      }, timePerStep); // End setIntervals
 
 
-    })
+    }); // End filteredData.forEach()
     
   } // End moveToNextPeriod()
 

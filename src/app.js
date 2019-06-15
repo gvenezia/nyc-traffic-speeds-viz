@@ -203,20 +203,40 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
         // push polyline to array
         polylinesObj[d.link_id] = customPath;
 
-        let interpolate = d3.interpolate(0,1);
+        let interpolate = d3.interpolate(1e-6,1);
         
-        let opacityInterpolaterId = setInterval( () => {
-            if (step++ > numSteps && ++updatedPolylineCount === filteredData.length) {
-              console.log('END OPACITY INTERVALS');
-              requestAnimationFrame( now => {
-                moveToNextPeriod(startHour, startMin, filteredData)
-              });
-              return clearInterval(opacityInterpolaterId);
-            } 
-            polylinesObj[d.link_id].setOptions({
-              strokeOpacity: interpolate(step/numSteps)
+        // let opacityInterpolaterId = setInterval( () => {
+        //     if (step++ > numSteps && ++updatedPolylineCount === filteredData.length) {
+        //       console.log('END OPACITY INTERVALS');
+        //       requestAnimationFrame( now => {
+        //         moveToNextPeriod(startHour, startMin, filteredData)
+        //       });
+        //       return clearInterval(opacityInterpolaterId);
+        //     } 
+        //     polylinesObj[d.link_id].setOptions({
+        //       strokeOpacity: interpolate(step/numSteps)
+        //     });
+        // }, timePerStep);
+
+        const duration = 800;
+        let start = performance.now();
+
+        let frameTick = now => {
+          let progress = now - start;
+
+          if (progress > duration && ++updatedPolylineCount === filteredData.length){
+            console.log('END OPACITY INTERVALS');
+            return requestAnimationFrame( now => {
+              moveToNextPeriod(startHour, startMin, filteredData)
             });
-        }, timePerStep);
+          }
+          polylinesObj[d.link_id].setOptions({
+              strokeOpacity: interpolate(progress/duration)
+            });
+          requestAnimationFrame(frameTick);
+        }
+        requestAnimationFrame(frameTick);
+
       }); // End filteredData.forEach()
     }, 1000)
   );

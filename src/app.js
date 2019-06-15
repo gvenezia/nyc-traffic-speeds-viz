@@ -163,87 +163,63 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   filteredData = data.filter( d => d.data_as_of.indexOf( `T${startTime}` ) !== -1  )
 
-  filteredData.forEach( (d,i) => {
-    // Interpolation variables      
-    let step = 0;
+  google.maps.event.addListener(map, 'tilesloaded', 
+    setTimeout( () => {
+      filteredData.forEach( (d,i) => {
+        // Interpolation variables      
+        let step = 0;
 
-    console.log('start opacity interpolation');
+        console.log('start opacity interpolation');
 
-    // Decode the given polyline with geometry library
-    let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
+        // Decode the given polyline with geometry library
+        let decodedPath = google.maps.geometry.encoding.decodePath(d.encoded_poly_line);
 
-    // set the polyline
-    let customPath = new google.maps.Polyline({
-            path: decodedPath,
-            geodesic: true,
-            strokeColor: color(d.speed),
-            strokeOpacity: 0,
-            strokeWeight: 5,
-            map
-          }); 
+        // set the polyline
+        let customPath = new google.maps.Polyline({
+                path: decodedPath,
+                geodesic: true,
+                strokeColor: color(d.speed),
+                strokeOpacity: 0,
+                strokeWeight: 5,
+                map
+              }); 
 
-    let infowindow = new google.maps.InfoWindow({
-      content: `<div class="infowindow">
-          <p>${d.link_name}</p>
-          <p>${d.link_id}</p>
-        </div>`
-    });
+        let infowindow = new google.maps.InfoWindow({
+          content: `<div class="infowindow">
+              <p>${d.link_name}</p>
+              <p>${d.link_id}</p>
+            </div>`
+        });
 
-    // Add event listener for info window
-    customPath.addListener('click', function(){
-      infowindow.setPosition(decodedPath[0]);
-      infowindow.open(map);
+        // Add event listener for info window
+        customPath.addListener('click', function(){
+          infowindow.setPosition(decodedPath[0]);
+          infowindow.open(map);
 
-      // Thanks to @geocodezip for the explanation of why setPosition is necessary
-      // link: https://stackoverflow.com/a/42331525/8585320
-    });
+          // Thanks to @geocodezip for the explanation of why setPosition is necessary
+          // link: https://stackoverflow.com/a/42331525/8585320
+        });
 
-    // push polyline to array
-    polylinesObj[d.link_id] = customPath;
+        // push polyline to array
+        polylinesObj[d.link_id] = customPath;
 
-    google.maps.event.addListener(map, 'tilesloaded', setTimeout( () => {
+        let interpolate = d3.interpolate(0,1);
+        
         let opacityInterpolaterId = setInterval( () => {
-           if (step++ > numSteps) {
+            if (step++ > numSteps && ++updatedPolylineCount === filteredData.length) {
               console.log('END OPACITY INTERVALS');
-              
-              if (++updatedPolylineCount === filteredData.length)
+              requestAnimationFrame( now => {
                 moveToNextPeriod(startHour, startMin, filteredData)
-              
+              });
               return clearInterval(opacityInterpolaterId);
-           } else {
-              let interpolatedOpacity = d3.interpolate(0,1)(step/numSteps);
-              polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-           }
+            } 
+            polylinesObj[d.link_id].setOptions({
+              strokeOpacity: interpolate(step/numSteps)
+            });
         }, timePerStep);
-
-        // let timeStart = performance.now();
-        // let interpolate = d3.interpolate(0,1);
-
-        // var frameTick = now => {
-        //   if (timePerStep <= now - timeStart){
-        //     timeStart = now;
-
-        //     if (step++ > numSteps) {
-        //        console.log('END OPACITY INTERVALS');
-               
-        //        if (++updatedPolylineCount === filteredData.length)
-        //          moveToNextPeriod(startHour, startMin, filteredData)
-               
-        //        return clearInterval(opacityInterpolaterId);
-        //     } else {
-        //        let interpolatedOpacity = interpolate(step/numSteps);
-        //        polylinesObj[d.link_id].setOptions({strokeOpacity: interpolatedOpacity});
-        //        requestAnimationFrame(frameTick)
-        //     }
-        //   }  
-        // }; // End frameTick
-        // requestAnimationFrame(frameTick)
-      }, 1000)
-    );
-
-    
-
-  }); // End filteredData.forEach()
+      }); // End filteredData.forEach()
+    }, 1000)
+  );
 
   // setTimeout( moveToNextPeriodBrute, 5000);
 
@@ -300,14 +276,18 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
           // Check for last datum in current period
           if (i + 1 === filteredData.length)
-            moveToNextPeriod(currHour, currMin, filteredData)
+            requestAnimationFrame( now => {
+              moveToNextPeriod(currHour, currMin, filteredData)
+            });
 
           return clearInterval(colorInterpolaterId);
           
         } else {
           polylinesObj[d.link_id].setOptions({strokeColor: interpolater(step/numSteps)});
         }
-      }, timePerStep);  
+      }, timePerStep); 
+
+
     })
     
   } // End moveToNextPeriod()

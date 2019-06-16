@@ -96,7 +96,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
         })
         console.log('clicked', this );
         // clearInterval( opacityInterpolaterId)
-        clearInterval(colorInterpolaterId)
+        clearInterval(colorInterpolatorId)
         return
       });
 
@@ -233,6 +233,7 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
               moveToNextPeriod(timestamp, startHour, startMin, filteredData)
             });
           }
+          // check that setOptions is batch setting
           polylinesObj[d.link_id].setOptions({
               strokeOpacity: interpolateOpacity(progress/periodDuration)
             });
@@ -243,6 +244,8 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
       }); // End filteredData.forEach()
     }, 1000)
   );
+
+
 
   // setTimeout( moveToNextPeriodBrute, 5000);
 
@@ -295,24 +298,44 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
       // Must be declared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
       // setInterval is called for each of the datapoints in the filteredData
-      let colorInterpolaterId = setInterval( () => {
-        if (typeof polylinesObj[d.link_id] === 'undefined' || 
-            step++ > numSteps) {
+      // let colorInterpolatorId = setInterval( () => {
+      //   if (typeof polylinesObj[d.link_id] === 'undefined' || 
+      //       step++ > numSteps) {
+      //     console.log('END color interpolation');
+
+      //     // Check for last datum in current period
+      //     if (i + 1 === filteredData.length)
+      //       requestAnimationFrame( timestamp => {
+      //         moveToNextPeriod(timestamp, currHour, currMin, filteredData);
+      //       });
+
+      //     return clearInterval(colorInterpolatorId);
+          
+      //   } else {
+      //     polylinesObj[d.link_id].setOptions({strokeColor: interpolateRGB(step/numSteps)});
+      //   }
+      // }, timePerStep); // End setIntervals
+
+      let colorInterpolatorFrame = timestamp => {
+        let progress = timestamp - start;
+
+        if (typeof polylinesObj[d.link_id] === 'undefined' || progress > periodDuration){
           console.log('END color interpolation');
 
-          // Check for last datum in current period
-          if (i + 1 === filteredData.length)
+          if (i + 1 === filteredData.length){
             requestAnimationFrame( timestamp => {
-              moveToNextPeriod(timestamp, currHour, currMin, filteredData)
+              moveToNextPeriod(timestamp, currHour, currMin, filteredData);
             });
+          }
 
-          return clearInterval(colorInterpolaterId);
-          
-        } else {
-          polylinesObj[d.link_id].setOptions({strokeColor: interpolateRGB(step/numSteps)});
+          // return cancelAnimationFrame(reqID);
         }
-      }, timePerStep); // End setIntervals
 
+        polylinesObj[d.link_id].setOptions({strokeColor: interpolateRGB(progress/periodDuration)});
+
+        reqID = requestAnimationFrame(colorInterpolatorFrame);
+      } // End colorInterpolatorFrame
+      let reqID = requestAnimationFrame(colorInterpolatorFrame);
 
     }); // End filteredData.forEach()
     
@@ -340,14 +363,14 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
 
   //     // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
   //     // setInterval is called for each of the datapoints in the filteredData
-  //     let colorInterpolaterId = setInterval( () => {
+  //     let colorInterpolatorId = setInterval( () => {
   //       if (step++ > numSteps) {
   //         console.log('END color interpolation');
 
   //         if (++updatedPolylineCount === filteredData.length)
   //           setTimeout( moveToNextPeriodBrute2(), 2000);
 
-  //         return clearInterval(colorInterpolaterId);
+  //         return clearInterval(colorInterpolatorId);
           
   //       } else {
   //         let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
@@ -373,14 +396,14 @@ d3.csv("data/DOT_Traffic_Speeds_NBE_limit_10000_3-21_f.csv", function(error, dat
   //     let step = 0;
   //     // Must be delcared with `let` in order to properly assign consecutive intervalId's (which are then referenced by clearInterval() in order to stop the function calls)
   //     // setInterval is called for each of the datapoints in the filteredData
-  //     let colorInterpolaterId = setInterval( () => {
+  //     let colorInterpolatorId = setInterval( () => {
   //       if (step++ > numSteps) {
   //         console.log('END color interpolation');
 
   //         // if (++updatedPolylineCount === filteredData.length)
   //         //   moveToNextPeriodBrute2(startHour, startMin)
 
-  //         return clearInterval(colorInterpolaterId);
+  //         return clearInterval(colorInterpolatorId);
           
   //       } else {
   //         let interpolatedColor = d3.interpolateRgb( color(d.speed), color(nextSpeed) )(step/numSteps);
